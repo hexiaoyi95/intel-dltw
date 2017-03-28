@@ -3,6 +3,7 @@
 
 import os, sys
 import argparse
+import logging
 
 SCRIPT_HOME = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG = os.path.join(SCRIPT_HOME, '..', 'test-config', 'config-template.json')
@@ -10,7 +11,6 @@ DEFAULT_CONFIG = os.path.join(SCRIPT_HOME, '..', 'test-config', 'config-template
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..'))
 from utils.io import json2obj
 from applications import applications_factory
-#from backends import backends_factory
 
 def args_process():
     arg_parser = argparse.ArgumentParser(description='')
@@ -18,12 +18,25 @@ def args_process():
     args = arg_parser.parse_args()
     return args
 
+def setup_logger(name):
+    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+
+    return logging.getLogger(name)
+
 def main():
     args = args_process()
     config = json2obj(args.config)
 
-    app = applications_factory(config.application)
+    setup_logger("root")
 
+    app = applications_factory(config.application)
     app.run(config)
 
 if __name__ == "__main__":

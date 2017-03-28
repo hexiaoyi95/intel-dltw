@@ -44,5 +44,7 @@ def get_elapsed_ms(method):
     return (te-ts)*1000
 
 
-def shuffle_input():
-    pass
+def shuffle_inputs(inputs):
+    inputs.append(
+        inputs.pop(0)
+    )

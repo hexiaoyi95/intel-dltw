@@ -1,6 +1,9 @@
 {
-
-    "backend" : ["backends.caffe_backend.CaffeBackend", "/home/linxinan/workspace/caffe/intel/python"],
+    "backend" : {
+        "python_path" : "/home/linxinan/workspace/caffe/intel/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "default"
+    },
     "application" : "applications.image_classification.infer",
     "test_type" : "performance",
     "model" : {
@@ -10,7 +13,5 @@
     "input_path" : "/home/linxinan/infer-perf-tool/data/ilsvrc12/ilsvrc12_val_bmp/224",
     "mean_value" : [104,117,123],
     "batch_size" : 2,
-    "iteration" : 1,
-
-    "END" : "Please add elements before this line, so you don't need to consider about deleting the last comma"
+    "iteration" : 1
 }
