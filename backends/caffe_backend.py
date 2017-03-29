@@ -1,11 +1,19 @@
-import caffe
 import numpy as np
 import utils
 import logging
+import os
+os.environ['GLOG_minloglevel'] = '2'
+import caffe
 logger = logging.getLogger('root')
 class CaffeBackend():
-    def __init__(self):
+    def __init__(self, config):
         print "Use Caffe as backend."
+        topology_path = os.path.expanduser(str(config.model.topology))
+        weight_path = os.path.expanduser(str(config.model.weight))
+        if  (not hasattr(config, 'engine')) or (config.engine == "default"):
+            self.net = caffe.Net(topology_path, weight_path, caffe.TEST)
+        else:
+            self.net = caffe.Net(topology_path, caffe.TEST, 0, None, weight_path, str(config.engine))
 
     def  shuffle_inputs(self):
         utils.benchmark.shuffle_inputs(self.inputs)
@@ -13,15 +21,12 @@ class CaffeBackend():
 
         self.set_net_input(self.inputs)
 
-    def prepare_classify(self, config):
-        if  (not hasattr(config, 'engine')) or (config.engine == "default"):
-            self.net = caffe.Net(str(config.model.topology), str(config.model.weight), caffe.TEST)
-        else:
-            self.net = caffe.Net(str(config.model.topology), caffe.TEST, 0, None, str(config.model.weight), str(config.engine))
+    def prepare_classify(self,img_names, config):
+
 
         self.reshape_by_batch_size(config.batch_size)
 
-        self.input_names = utils.io.get_input_list(config.input_path, config.batch_size)
+        self.input_names = img_names
         self.inputs = self.image_preprocess(self.input_names, mean_value = config.mean_value)
 
         self.set_net_input(self.inputs)
@@ -36,6 +41,7 @@ class CaffeBackend():
         kwargs      :   dict
         mean_file : string
         mean_value : [v1, v2, v3]
+
         Returns
         ----------
         imgs: list of ndarray
@@ -87,24 +93,20 @@ class CaffeBackend():
 
     def get_classify_output(self, topN=5):
         """
-        output : list for images prediction
-        [
-            ['image_name', [ (label, prob),
-                ....
-                ]
-            ]
-        ]
+        output : dict for images prediction
+        {
+            'image_name', [ (label_1, prob_1), (label_2, prob_2) ]
+        }
         """
         datas = {out: self.net.blobs[out].data for out in self.net.outputs}
         data = datas['prob']
-        output = []
+        output = {}
         for i, prediction in enumerate(data):
             top_inds = prediction.argsort()[::-1][:topN]  # reverse sort and take five largest items
             ps = []
             for top_ind in top_inds:
-                ps.append( (top_ind, prediction[top_ind]))
-            output.append([self.input_names[i], ps])
-
+                ps.append((top_ind, float(prediction[top_ind])))
+            output[self.input_names[i]] = ps
         return output
 
     def infer(self):

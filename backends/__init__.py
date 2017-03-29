@@ -1,5 +1,5 @@
 import importlib
-import sys
+import sys, os
 
 def backends_factory(backend_info):
     """
@@ -11,7 +11,7 @@ def backends_factory(backend_info):
     return a backend class by target backend_info
     """
 
-    sys.path.insert(1, backend_info.python_path)
+    sys.path.insert(1, os.path.expanduser(backend_info.python_path))
     model = importlib.import_module(backend_info.class_path.rsplit('.', 1)[0])
     backend_class = getattr(model, backend_info.class_path.rsplit('.', 1)[1])
 

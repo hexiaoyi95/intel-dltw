@@ -6,7 +6,8 @@ import glob
 import numpy as np
 import skimage.io
 import json
-def get_input_list(input_path, img_num = sys.maxint):
+logger = logging.getLogger()
+def get_input_list(input_path, img_num = None):
     """
     return image list
     """
@@ -20,11 +21,15 @@ def get_input_list(input_path, img_num = sys.maxint):
         if len(input_list) == 0:
             logging.error("Error no images found in folder {}".format(input_path))
             return 1
+
+        if img_num == None:
+            img_num = len(input_list)
+
         while len(input_list) < img_num:
             input_list += input_list
-        # only one batch here
+
         input_list = input_list[:img_num]
-        logging.debug("Got {0:d} images".format(len(input_list)))
+        logger.debug("Got {0:d} images".format(len(input_list)))
     else:
         if os.path.exists(input_path):
             logging.debug("Got one image: %s" % input_path)
@@ -32,6 +37,11 @@ def get_input_list(input_path, img_num = sys.maxint):
         else:
             raise Exception("Invalid input path")
     return input_list
+
+def slice2batches(input_list, batch_size):
+    while len(input_list) % batch_size:
+        input_list.append(input_list[-1])
+    return [input_list[0+i: batch_size+i] for i in xrange(0, len(input_list), batch_size)]
 
 
 def load_image(filename, color=True):
@@ -63,9 +73,15 @@ def load_image(filename, color=True):
 
 from collections import namedtuple
 def json2obj(json_path):
+    json_path = os.path.expanduser(json_path)
     with open(json_path, 'r') as fp:
         data = fp.read().replace('\n', '')
     obj = json.loads(data, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
     return obj
 
 
+def dict2json(d, json_path):
+    if not os.path.exists(os.path.dirname(json_path)):
+        os.makedirs(os.path.dirname(json_path))
+    with open(json_path, 'w') as fp:
+        json.dump(d, fp, indent=4)

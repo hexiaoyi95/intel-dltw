@@ -5,6 +5,7 @@ import os, sys
 import argparse
 import logging
 from logging.config import fileConfig
+os.environ['GLOG_minloglevel'] = '3' 
 SCRIPT_HOME = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG = os.path.join(SCRIPT_HOME, '..', 'test-config', 'config-template.json')
 
