@@ -4,7 +4,7 @@
 import os, sys
 import argparse
 import logging
-
+from logging.config import fileConfig
 SCRIPT_HOME = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_CONFIG = os.path.join(SCRIPT_HOME, '..', 'test-config', 'config-template.json')
 
@@ -18,23 +18,25 @@ def args_process():
     args = arg_parser.parse_args()
     return args
 
-def setup_logger(name):
-    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
+def setup_logger():
+    fileConfig(os.path.join(SCRIPT_HOME,'..', 'logging_config.ini'))
+    # formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)s - %(module)s - %(message)s')
 
-    handler = logging.StreamHandler()
-    handler.setFormatter(formatter)
+    # handler = logging.StreamHandler()
+    # handler.setFormatter(formatter)
 
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
+    # logger = logging.getLogger(name)
+    # logger.setLevel(logging.DEBUG)
+    # logger.addHandler(handler)
 
-    return logging.getLogger(name)
+    # return logging.getLogger(name)
 
 def main():
     args = args_process()
-    config = json2obj(args.config)
 
-    setup_logger("root")
+    setup_logger()
+
+    config = json2obj(args.config)
 
     app = applications_factory(config.application)
     app.run(config)

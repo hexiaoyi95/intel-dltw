@@ -8,13 +8,8 @@ class CaffeBackend():
         print "Use Caffe as backend."
 
     def  shuffle_inputs(self):
-        self.inputs.append(
-            self.inputs.pop(0)
-        )
-
-        self.input_names.append(
-            self.input_names.pop(0)
-        )
+        utils.benchmark.shuffle_inputs(self.inputs)
+        utils.benchmark.shuffle_inputs(self.input_names)
 
         self.set_net_input(self.inputs)
 
@@ -27,7 +22,7 @@ class CaffeBackend():
         self.reshape_by_batch_size(config.batch_size)
 
         self.input_names = utils.io.get_input_list(config.input_path, config.batch_size)
-        self.inputs = self.image_preprocess(input_names, mean_value = config.mean_value)
+        self.inputs = self.image_preprocess(self.input_names, mean_value = config.mean_value)
 
         self.set_net_input(self.inputs)
 
@@ -90,7 +85,7 @@ class CaffeBackend():
         """
         self.net.blobs['data'].data[...] = inputs
 
-    def get_classify_output(self, image_names, topN=5):
+    def get_classify_output(self, topN=5):
         """
         output : list for images prediction
         [
@@ -100,7 +95,7 @@ class CaffeBackend():
             ]
         ]
         """
-        datas = {out: self.blobs[out].data for out in self.net.outputs}
+        datas = {out: self.net.blobs[out].data for out in self.net.outputs}
         data = datas['prob']
         output = []
         for i, prediction in enumerate(data):
@@ -108,7 +103,7 @@ class CaffeBackend():
             ps = []
             for top_ind in top_inds:
                 ps.append( (top_ind, prediction[top_ind]))
-            output.append([image_names[i], ps])
+            output.append([self.input_names[i], ps])
 
         return output
 
