@@ -42,8 +42,9 @@ def test_inference_accuracy(backend, config):
     utils.io.dict2json(outputs, out_file)
 
     res = check_classify_result(out_file, config.reference.result_file)
-
-    return res
+    pprint.pprint(res)
+    res_check_file = os.path.join(config.out_dir, 'check.json')
+    utils.io.dict2json(res, res_check_file)
 
 def run(config):
     backend_class = backends_factory(config.backend)

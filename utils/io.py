@@ -79,6 +79,10 @@ def json2obj(json_path):
     obj = json.loads(data, object_hook=lambda d: namedtuple('X', d.keys())(*d.values()))
     return obj
 
+def json2dict(json_path):
+    json_path = os.path.expanduser(json_path)
+    with open(json_path, 'r') as fp:
+        return json.load(fp)
 
 def dict2json(d, json_path):
     json_path = os.path.expanduser(json_path)
