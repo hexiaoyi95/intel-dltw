@@ -81,6 +81,7 @@ def json2obj(json_path):
 
 
 def dict2json(d, json_path):
+    json_path = os.path.expanduser(json_path)
     if not os.path.exists(os.path.dirname(json_path)):
         os.makedirs(os.path.dirname(json_path))
     with open(json_path, 'w') as fp:
