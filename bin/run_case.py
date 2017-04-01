@@ -7,7 +7,7 @@ import logging
 from logging.config import fileConfig
 os.environ['GLOG_minloglevel'] = '3' 
 SCRIPT_HOME = os.path.dirname(os.path.realpath(__file__))
-DEFAULT_CONFIG = os.path.join(SCRIPT_HOME, '..', 'test-config', 'config-template.json')
+DEFAULT_CONFIG = os.path.join(SCRIPT_HOME, '..', 'test-config', 'templates', 'img-classification-infer-accuracy.json')
 
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..'))
 from utils.io import json2obj

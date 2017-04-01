@@ -14,10 +14,10 @@
     "mean_value" : [104,117,123],
     "batch_size" : 4,
     "iteration" : 4,
-    "out_dir" : "/home/linxinan/workspace/dltw/out/intel-caffe-batch4",
-    "ref_backend" : {
-        "python_path" : "~/workspace/caffe/bvlc/python",
-        "class_path" : "backends.caffe_backend.CaffeBackend",
-        "engine" : "default"
+    "out_dir" : "~/workspace/dltw/out/intel-caffe-batch4",
+    "reference" : {
+        "config" : "~/workspace/dltw/test-config/templates/img-classification-infer-accuracy-template.json",
+        "result_file" : "~/workspace/dltw/out/intel-caffe-batch4/accuracy.json",
+        "rerun" : false
     }
 }

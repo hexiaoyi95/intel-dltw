@@ -1,6 +1,7 @@
 import sys, os
 import logging
 import utils
+from utils.result_check import check_classify_result
 from backends import backends_factory
 import pprint
 
@@ -39,12 +40,10 @@ def test_inference_accuracy(backend, config):
 
     out_file = os.path.join(config.out_dir, 'accuracy.json')
     utils.io.dict2json(outputs, out_file)
-    #ref_backend = backends_factory(config.ref_backend)
 
-    #ref_output = infer4result(ref_backend, config)
+    res = check_classify_result(out_file, config.reference.result_file)
 
-    #print ref_output
-    return
+    return res
 
 def run(config):
     backend_class = backends_factory(config.backend)
