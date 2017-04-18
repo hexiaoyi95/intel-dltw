@@ -1,0 +1,14 @@
+{
+    "backend" : {
+        "python_path" : "~/workspace/caffe/intel/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "default"
+    },
+    "application" : "applications.performance",
+    "model" : {
+        "topology" : "~/workspace/caffe/intel/models/bvlc_googlenet/deploy.prototxt"
+    },
+    "batch_size" : 4,
+    "iteration" : 4,
+    "out_dir" : "~/workspace/dltw/out/intel-caffe-batch4"
+}

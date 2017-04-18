@@ -3,6 +3,28 @@
 import time
 import numpy
 
+class Timer():
+    def __init__(self):
+        self._start = None
+        self._stop = None
+
+    def start(self):
+        self._started = True;
+        self._start = time.time()
+
+    def stop(self):
+        if(self._started):
+            self._stop = time.time()
+        else:
+            raise Exception('Start point not found')
+
+    def seconds(self):
+        return self._stop - self._start;
+
+    def milliseconds(self):
+        return self.seconds() * 1000
+
+
 def inference_performance(iteration, shuffle_input, target_method):
     """
     obj contain:
@@ -31,8 +53,6 @@ def performance_analysis(perf_list):
         perf_list.pop(0)
     mean = numpy.mean(perf_list)
     std = numpy.std(perf_list)
-    print perf_list
-    print mean, std
     return mean, std
 
 

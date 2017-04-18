@@ -58,8 +58,6 @@ def get_input_from_txt(input_txt, img_num = None):
 
     return input_list
 
-
-
 def slice2batches(input_list, batch_size):
     while len(input_list) % batch_size:
         input_list.append(input_list[-1])

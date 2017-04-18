@@ -2,18 +2,37 @@ import numpy as np
 import utils
 import logging
 import os
-os.environ['GLOG_minloglevel'] = '2'
+
+# os.environ['GLOG_minloglevel'] = '2'
 import caffe
+import inspect
 logger = logging.getLogger('root')
 class CaffeBackend():
     def __init__(self, config):
-        print "Use Caffe as backend."
+        # "Use Caffe as backend."
+        # caffe constructor: network_file, phase, level, stages, weight, engine
         topology_path = os.path.expanduser(str(config.model.topology))
-        weight_path = os.path.expanduser(str(config.model.weight))
-        if  (not hasattr(config, 'engine')) or (config.engine == "default"):
-            self.net = caffe.Net(topology_path, weight_path, caffe.TEST)
+        if  (hasattr(config, 'engine')) and (config.engine != "default"):
+            engine = str(config.backend.engine)
         else:
-            self.net = caffe.Net(topology_path, caffe.TEST, 0, None, weight_path, str(config.engine))
+            engine = None
+
+        if hasattr(config.backend, 'weight'):
+            weight_path = os.path.expanduser(str(config.model.weight))
+        else:
+            weight_path = None
+
+        if config.application == "applications.performance":
+            logger.debug("backend for performance")
+            phase = caffe.TRAIN
+        else:
+            phase = caffe.TEST
+
+        caffe.set_mode_cpu()
+        try:
+            self.net = caffe.Net(topology_path, phase, weights=weight_path, engine=engine)
+        except:
+            self.net = caffe.Net(topology_path, phase, weights=weight_path)
 
     def  shuffle_inputs(self):
         utils.benchmark.shuffle_inputs(self.inputs)
@@ -21,9 +40,10 @@ class CaffeBackend():
 
         self.set_net_input(self.inputs)
 
+    def prepare_benchmark(self, config):
+        self.reshape_by_batch_size(config.batch_size)
+
     def prepare_classify(self,img_names, config):
-
-
         self.reshape_by_batch_size(config.batch_size)
 
         self.input_names = img_names
@@ -166,6 +186,23 @@ class CaffeBackend():
                 weights[key] = param.data
 
         return datas,weights
+    def layers(self):
+        return self.net.layers
+
+    def get_layer_name(self, layer_id):
+        return list(self.net._layer_names)[layer_id]
+
+    def get_layer_type(self, layer_id):
+        return list(self.net.layers)[layer_id].type
+
+    def forward(self):
+        self.net.forward()
+
+    def forward_layer(self, layer_id):
+        self.net._forward(layer_id, layer_id)
+
+    def backward_layer(self, layer_id):
+        self.net._backward(layer_id, layer_id)
 
 
     def infer(self):

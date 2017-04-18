@@ -55,7 +55,6 @@ def isEqualPrediction(pred, ref_pred):
 
     return results
 
-
 def isEqualDetection(detec, ref_detec_):
     """
     Parameters:
@@ -93,7 +92,6 @@ def isEqualDetection(detec, ref_detec_):
         del ref_detec[index]
 
     return res
-
 
 
 def update_result(results, new_results):
@@ -145,7 +143,6 @@ def check_classify_result(test_file, reference_file):
                 update_result(results, new_results)
 
     return res_as_dict(results)
-
 
 def check_detection_result(test_file,reference_file,):
 
@@ -217,17 +214,6 @@ def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, ch
             res[1] &= weight_isequal
 
     return res
-
-
-
-
-
-
-
-
-
-
-
 
 
 
