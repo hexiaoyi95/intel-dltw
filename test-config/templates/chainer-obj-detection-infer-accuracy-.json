@@ -1,0 +1,14 @@
+{
+    "backend" : {
+        "python_path" : "/home/xiaoyihe/chainer-intel/build/lib.linux-x86_64-2.7",
+        "class_path" : "backends.chainer_backend.ChainerBackend",
+        "engine" : "default"
+    },
+    "application" : "applications.obj_detection.infer",
+    "test_type" : "accuracy",
+    "input_path" : "/home/xiaoyihe/infer-perf-tool/data/VOC0712_test/test.txt",
+    "mean_value" : [104,117,123],
+    "batch_size" : 1,
+    "iteration" : 1,
+    "out_dir" : "~/dltw/out/intel-chainer-batch1"
+}

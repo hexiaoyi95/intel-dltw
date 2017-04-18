@@ -38,6 +38,28 @@ def get_input_list(input_path, img_num = None):
             raise Exception("Invalid input path")
     return input_list
 
+def get_input_from_txt(input_txt, img_num = None):
+
+    input_list = []
+    input_txt= os.path.expanduser(input_txt)
+    txt_path,txt_name = os.path.split(input_txt)
+    file = open(input_txt,"r")
+    for line in file:
+        line = line[:-1] #dele \n
+        input_list.append(txt_path +"/"+ line)
+
+    if img_num == None:
+        img_num = len(input_list)
+
+    while len(input_list) < img_num:
+        input_list += input_list
+
+    logger.debug("Got {0:d} images".format(len(input_list)))
+
+    return input_list
+
+
+
 def slice2batches(input_list, batch_size):
     while len(input_list) % batch_size:
         input_list.append(input_list[-1])

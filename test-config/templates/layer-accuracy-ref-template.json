@@ -1,0 +1,20 @@
+{
+    "backend" : {
+        "python_path" : "~/ssd-caffe/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "default"
+    },
+    "application" : "applications.layer_accuracy",
+    "test_type" : "accuracy",
+    "model" : {
+        "topology" : "~/infer-perf-tool/models/bvlc_googlenet/deploy.prototxt" ,
+        "weight" : "~/infer-perf-tool/models/bvlc_googlenet/bvlc_googlenet.caffemodel"
+    },
+    "input_path" : "~/infer-perf-tool/data/ilsvrc12/ilsvrc12_val_bmp/test224.txt",
+    "mean_value" : [104,117,123],
+    "batch_size" : 4,
+    "iteration" : 1,
+    "isref": true,
+    "out_dir" : "~/dltw/out/layer-accuracy-ref"
+
+}

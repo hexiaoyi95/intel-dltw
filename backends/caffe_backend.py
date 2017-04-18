@@ -31,7 +31,6 @@ class CaffeBackend():
 
         self.set_net_input(self.inputs)
 
-
     def image_preprocess(self, img_list, **kwargs):
         """
         Load images and transform input to caffe input
@@ -109,5 +108,77 @@ class CaffeBackend():
             output[self.input_names[i]] = ps
         return output
 
+    def get_detection_output(self, threshold=0.6):
+        """
+        output: dict for object detection
+        {
+          'image_name', [(conf_1, label_1, xmin_1, ymin_1 ,xmax_1, ymax_1),
+             (conf_2, label_2, xmin_2, ymin_2, xmax_2, ymax_2) ... ]
+        }
+        """
+        detections = self.net.blobs['detection_out'].data;
+        output = {}
+        for j in xrange(detections.shape[0]):
+
+            ps = []
+            det_index = detections[j, 0, :, 0]
+            det_label = detections[j, 0, :, 1]
+            det_conf = detections[j, 0, :, 2]
+            det_xmin = detections[j, 0, :, 3]
+            det_ymin = detections[j, 0, :, 4]
+            det_xmax = detections[j, 0, :, 5]
+            det_ymax = detections[j, 0, :, 6]
+
+            top_indices = [i for i, conf in enumerate(det_conf) if conf >= threshold]
+            top_index = det_index[top_indices]
+            top_conf = det_conf[top_indices]
+            top_label_indices = det_label[top_indices].tolist()
+            #top_labels = get_labelname(labelmap, top_label_indices)
+            top_xmin = det_xmin[top_indices]
+            top_ymin = det_ymin[top_indices]
+            top_xmax = det_xmax[top_indices]
+            top_ymax = det_ymax[top_indices]
+
+            for k in xrange(top_conf.shape[0]):
+                img_index = top_index[k]
+                xmin = top_xmin[k]
+                ymin = top_ymin[k]
+                xmax = top_xmax[k]
+                ymax = top_ymax[k]
+                score = top_conf[k]
+                label = int(top_label_indices[k])
+                #label_name = top_labels[k]
+                ps.append((float(score), label, float(xmin), float(ymin) ,float(xmax), float(ymax)));
+            output[self.input_names[j]] = ps
+
+        return output
+
+    def get_layer_accuracy_output(self):
+
+        datas = {}
+        weights = {}
+        for key,value in self.net.blobs.iteritems():
+            datas[key] = value.data
+
+        for key,value in self.net.params.iteritems():
+            for index in xrange(len(value)):
+                key = key + '_' + str(index)
+                param = value[index]
+                weights[key] = param.data
+
+        return datas,weights
+
+
     def infer(self):
         self.net.forward()
+
+    def backward(self):
+        top_diff = {}
+        for i in xrange(len(self.net.outputs)):
+            #print self.net.outputs[i]
+            diff = np.zeros_like(self.net.blobs[self.net.outputs[i]].diff)
+            diff += 100
+            top_diff[self.net.outputs[i]] = diff[...]
+        self.net.backward(**top_diff)
+
+        #print self.net.blobs['conv1_1'].diff
