@@ -118,38 +118,37 @@ class CaffeBackend():
         """
         detections = self.net.blobs['detection_out'].data;
         output = {}
-        for j in xrange(detections.shape[0]):
+        ps =  [[] for i in range(len(self.input_names))]
+        det_index = detections[0, 0, :, 0]
+        det_label = detections[0, 0, :, 1]
+        det_conf = detections[0, 0, :, 2]
+        det_xmin = detections[0, 0, :, 3]
+        det_ymin = detections[0, 0, :, 4]
+        det_xmax = detections[0, 0, :, 5]
+        det_ymax = detections[0, 0, :, 6]
 
-            ps = []
-            det_index = detections[j, 0, :, 0]
-            det_label = detections[j, 0, :, 1]
-            det_conf = detections[j, 0, :, 2]
-            det_xmin = detections[j, 0, :, 3]
-            det_ymin = detections[j, 0, :, 4]
-            det_xmax = detections[j, 0, :, 5]
-            det_ymax = detections[j, 0, :, 6]
+        top_indices = [i for i, conf in enumerate(det_conf) if conf >= threshold]
+        top_index = det_index[top_indices]
+        top_conf = det_conf[top_indices]
+        top_label_indices = det_label[top_indices].tolist()
+        #top_labels = get_labelname(labelmap, top_label_indices)
+        top_xmin = det_xmin[top_indices]
+        top_ymin = det_ymin[top_indices]
+        top_xmax = det_xmax[top_indices]
+        top_ymax = det_ymax[top_indices]
 
-            top_indices = [i for i, conf in enumerate(det_conf) if conf >= threshold]
-            top_index = det_index[top_indices]
-            top_conf = det_conf[top_indices]
-            top_label_indices = det_label[top_indices].tolist()
-            #top_labels = get_labelname(labelmap, top_label_indices)
-            top_xmin = det_xmin[top_indices]
-            top_ymin = det_ymin[top_indices]
-            top_xmax = det_xmax[top_indices]
-            top_ymax = det_ymax[top_indices]
-
-            for k in xrange(top_conf.shape[0]):
-                img_index = top_index[k]
-                xmin = top_xmin[k]
-                ymin = top_ymin[k]
-                xmax = top_xmax[k]
-                ymax = top_ymax[k]
-                score = top_conf[k]
-                label = int(top_label_indices[k])
-                #label_name = top_labels[k]
-                ps.append((float(score), label, float(xmin), float(ymin) ,float(xmax), float(ymax)));
-            output[self.input_names[j]] = ps
+        for k in xrange(top_conf.shape[0]):
+            img_index = int(top_index[k])
+            xmin = top_xmin[k]
+            ymin = top_ymin[k]
+            xmax = top_xmax[k]
+            ymax = top_ymax[k]
+            score = top_conf[k]
+            label = int(top_label_indices[k])
+            #label_name = top_labels[k]
+            ps[img_index].append((float(score), label, float(xmin), float(ymin) ,float(xmax), float(ymax)));
+        for i in xrange(len(self.input_names)):
+            output[self.input_names[i]] = ps[i]
 
         return output
 

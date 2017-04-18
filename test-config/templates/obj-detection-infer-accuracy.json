@@ -15,9 +15,9 @@
     "batch_size" : 4,
     "iteration" : 1,
     "out_dir" : "~/dltw/out/intel-caffe-batch1",
+    "is_ref": false,
     "reference" : {
         "config" : "~/dltw/test-config/templates/obj-detection-infer-accuracy-template.json",
-        "result_file" : "~/dltw/out/ref/accuracy.json",
-        "rerun" : false
+        "result_file" : "~/dltw/out/ref/accuracy.json"
     }
 }
