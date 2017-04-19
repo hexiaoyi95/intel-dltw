@@ -45,7 +45,8 @@ def test_layer_accuracy(backend, config):
                         os.makedirs(os.path.dirname(npy_path))
                     np.save(npy_path, value)
         else:
-            check_result = check_layer_accuracy_result(batch_name, datas, weights, config.reference.result_dir,check_result)
+            result_dir = os.path.expanduser(config.reference.result_dir)
+            check_result = check_layer_accuracy_result(batch_name, datas, weights, result_dir, check_result)
             pprint.pprint(check_result)
 
 

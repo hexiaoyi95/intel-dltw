@@ -1,6 +1,6 @@
 {
     "backend" : {
-        "python_path" : "~/intel-caffe/python",
+        "python_path" : "~/workspace/caffe/intel/python",
         "class_path" : "backends.caffe_backend.CaffeBackend",
         "engine" : "default"
     },
@@ -15,10 +15,10 @@
     "batch_size" : 4,
     "iteration" : 1,
     "isref": false,
-    "out_dir" : "~/dltw/out/layer-accuracy-intel",
+    "out_dir" : "~/workspace/dltw/out/layer-accuracy-intel",
     "reference" : {
 
-        "result_dir": "/home/xiaoyihe/dltw/out/layer-accuracy-ref"
+        "result_dir": "~/workspace/dltw/out/layer-accuracy-ref"
 
     }
 
