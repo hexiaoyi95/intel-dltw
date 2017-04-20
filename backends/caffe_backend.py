@@ -17,7 +17,7 @@ class CaffeBackend():
         else:
             engine = None
 
-        if hasattr(config.backend, 'weight'):
+        if hasattr(config.model, 'weight'):
             weight_path = os.path.expanduser(str(config.model.weight))
         else:
             weight_path = None
@@ -183,7 +183,7 @@ class CaffeBackend():
             for index in xrange(len(value)):
                 key = key + '_' + str(index)
                 param = value[index]
-                weights[key] = param.data
+                weights[key] = param.diff
 
         return datas,weights
     def layers(self):
@@ -213,7 +213,7 @@ class CaffeBackend():
         for i in xrange(len(self.net.outputs)):
             #print self.net.outputs[i]
             diff = np.zeros_like(self.net.blobs[self.net.outputs[i]].diff)
-            diff += 100
+            diff += 1
             top_diff[self.net.outputs[i]] = diff[...]
         self.net.backward(**top_diff)
 

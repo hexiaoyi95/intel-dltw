@@ -53,13 +53,13 @@ def test_layer_accuracy(backend, config):
         if count % 2 == 0 or count == total_batches:
             logging.info("Done for %d/%d batches" % (count,total_batches))
 
-    if config.isref == True:
-        name_file =  os.path.join(config.out_dir, 'name.json')
-        utils.io.dict2json(batches_name, name_file)
-    else:
-        pprint.pprint(check_result)
-        res_check_file = os.path.join(config.out_dir, 'check.json')
-        utils.io.dict2json(check_result, res_check_file)
+
+    name_file =  os.path.join(config.out_dir, 'name.json')
+    utils.io.dict2json(batches_name, name_file)
+
+    pprint.pprint(check_result)
+    res_check_file = os.path.join(config.out_dir, 'check.json')
+    utils.io.dict2json(check_result, res_check_file)
 
 def run(config):
     backend_class = backends_factory(config.backend)
