@@ -67,7 +67,7 @@ class ChainerBackend():
 
 
 
-    def infer(self):
+    def forward(self):
 
         input_data = chainer.Variable(np.array(self.inputs,dtype=np.float32))
 
