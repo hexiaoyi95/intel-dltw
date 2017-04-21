@@ -25,11 +25,6 @@ class Timer():
         return self.seconds() * 1000
 
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> bug fix
 def inference_performance(iteration, shuffle_input, target_method):
     """
     obj contain:
