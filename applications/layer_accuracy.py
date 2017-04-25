@@ -29,7 +29,7 @@ def test_layer_accuracy(backend, config):
     outputs = {}
     batches_name = {}
     count = 0
-    check_result = [True,True]
+    check_result = {}
     for batch in batches:
         datas, weights = cal4result(backend, batch, config)
         count = count + 1
@@ -47,7 +47,7 @@ def test_layer_accuracy(backend, config):
         else:
             result_dir = os.path.expanduser(config.reference.result_dir)
             check_result = check_layer_accuracy_result(batch_name, datas, weights, result_dir, check_result)
-            pprint.pprint(check_result)
+            logger.debug(pprint.pprint(check_result))
 
 
         if count % 2 == 0 or count == total_batches:
@@ -57,7 +57,7 @@ def test_layer_accuracy(backend, config):
     name_file =  os.path.join(config.out_dir, 'name.json')
     utils.io.dict2json(batches_name, name_file)
 
-    pprint.pprint(check_result)
+    #pprint.pprint(check_result)
     res_check_file = os.path.join(config.out_dir, 'check.json')
     utils.io.dict2json(check_result, res_check_file)
 

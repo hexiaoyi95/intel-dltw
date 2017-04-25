@@ -181,9 +181,9 @@ class CaffeBackend():
 
         for key,value in self.net.params.iteritems():
             for index in xrange(len(value)):
-                key = key + '_' + str(index)
+                param_key = key + '_' + str(index)
                 param = value[index]
-                weights[key] = param.diff
+                weights[param_key] = param.diff
 
         return datas,weights
     def layers(self):

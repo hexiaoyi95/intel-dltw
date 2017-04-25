@@ -179,10 +179,14 @@ def check_detection_result(test_file,reference_file,):
 
 
 def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, check_result):
-    res = check_result
+    last_res = check_result
+    if len(last_res) == 0:
+        first_result = True
+    else:
+        first_result = False
     ref_json = ref_dir + '/' + 'name.json'
     ref_batches_name = json2dict(ref_json)
-
+    
     for num, img_list in batch_name.iteritems():
         if not num in ref_batches_name :
             raise Exception('batch can not be found in reference data')
@@ -196,12 +200,14 @@ def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, ch
             data_isequal= np.allclose(test_datas[key], ref_data,  rtol=1e-03, atol=1e-0, equal_nan = True)
 
             if data_isequal == False:
-                print key
-                print abs(test_datas[key] - ref_data)
+                logger.debug(key)
+                #print abs(test_datas[key] - ref_data)
                 #print test_datas[key]
                 #print test_datas[key] - ref_data
-
-            res[0] &= data_isequal
+            if first_result:
+                last_res[key] = [data_isequal]
+            else:
+                last_res[key][0] &= data_isequal
 
         for key in test_weights:
 
@@ -210,12 +216,16 @@ def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, ch
             weight_isequal= np.allclose(test_weights[key], ref_weight, rtol=1e-03, atol=1e-0, equal_nan = True)
 
             if weight_isequal == False:
-                print key
+                logger.debug(key)
                 #print test_weights[key] - ref_weight
+            layer_name = key[:-2]
+            if first_result:
+                last_res[layer_name].append(weight_isequal)
+            else:
+                last_res[layer_name][1] &= weight_isequal
+            
 
-            res[1] &= weight_isequal
-
-    return res
+    return last_res
 
 
 
