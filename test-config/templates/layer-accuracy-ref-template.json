@@ -1,6 +1,6 @@
 {
     "backend" : {
-        "python_path" : "~/workspace/caffe/ssd-caffe/python",
+        "python_path" : "~/workspace/caffe/bvlc/python",
         "class_path" : "backends.caffe_backend.CaffeBackend",
         "engine" : "default"
     },

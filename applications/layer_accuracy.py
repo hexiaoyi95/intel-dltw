@@ -29,7 +29,7 @@ def test_layer_accuracy(backend, config):
     outputs = {}
     batches_name = {}
     count = 0
-    check_result = [True,True]
+    check_result = [True,True, '']
     for batch in batches:
         datas, weights = cal4result(backend, batch, config)
         count = count + 1
