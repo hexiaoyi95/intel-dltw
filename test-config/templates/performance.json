@@ -1,6 +1,6 @@
 {
     "backend" : {
-        "python_path" : "~/chainer/lib/python2.7/site-packages",
+        "python_path" : "~/chainer-intel/lib/python2.7/site-packages",
         "class_path" : "backends.chainer_backend.ChainerBackend",
         "engine" : "default"
     },

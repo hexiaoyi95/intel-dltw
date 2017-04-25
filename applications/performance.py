@@ -110,25 +110,28 @@ def get_chainer_perf(backend, config):
                 [layers_time,net_time]=backend.get_net_backward_perf()
 
             elapsed_s_layers_list = [[] for l in xrange(len(layers_time))]
-            elapsed_s_list.append(net_time)
+            elapsed_s_list.append(net_time * 1000)
 
             for j in xrange(len(layers_time)):
-                elapsed_s_layers_list[j].append(layers_time[j][1])
+                elapsed_s_layers_list[j].append(layers_time[j][1] * 1000)
+
+            logger.debug("Done for %d/%d" % (i + 1, config.iteration))
 
         for k in xrange(len(elapsed_s_layers_list)):
+            class_name = str(type(layers_time[k][0]))
+            function_name = class_name.split('.')[3]
             avg_time = utils.benchmark.performance_analysis(elapsed_s_layers_list[k])[0]
-            FPS = config.batch_size / avg_time
-            layer_perf = [k, avg_time, FPS]
+            FPS = config.batch_size / ( avg_time / 1000)
+            layer_perf = [function_name, avg_time, FPS]
             layers_perf.append(layer_perf)
 
         net_avg_time = utils.benchmark.performance_analysis(elapsed_s_list)[0]
-        net_FPS = config.batch_size / net_avg_time
-        net_perf = [avg_time,net_FPS]
+        net_FPS = config.batch_size / ( net_avg_time / 1000 )
+        net_perf = [net_avg_time,net_FPS]
 
         layers_perf_for_back.append(layers_perf)
         net_perf_for_back.append(net_perf)
 
-        logger.debug("Done for %d/%d" % (i, config.iteration))
 
     return layers_perf_for_back,net_perf_for_back
 
@@ -160,7 +163,7 @@ def run(config):
             'net_forward_perf'    : net_forward_perf,
             'net_backward_perf'   : net_backward_perf
         }
-    logger.debug(pprint.pformat(layers_forward_perf[-1]))
+    logger.debug(pprint.pformat(layers_forward_perf))
     logger.debug(pprint.pformat(layers_backward_perf))
     logger.debug(pprint.pformat(net_forward_perf))
     logger.debug(pprint.pformat(net_backward_perf))

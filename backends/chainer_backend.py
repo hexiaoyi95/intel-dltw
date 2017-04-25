@@ -7,6 +7,7 @@ os.environ['GLOG_minloglevel'] = '2'
 import chainer
 from chainer import serializers
 from chainer import function_hooks
+from chainer import functions as F
 logger = logging.getLogger('root')
 import sys
 import bbox
@@ -14,6 +15,7 @@ import ssd
 class ChainerBackend():
     def __init__(self, config):
         print "Use Chainer as backend."
+        print chainer.__file__
         if config.model.net == "googlenet":
             sys.path.insert(1,os.path.expanduser(config.model.path))
             googlenet = __import__("googlenet")
@@ -43,6 +45,10 @@ class ChainerBackend():
 
     def prepare_infer(self,img_names, config):
 
+        self.input_names = img_names
+        self.inputs = self.image_preprocess(self.input_names, mean_value = config.mean_value)
+
+    def prepare_classify(self, img_names, config):
         self.input_names = img_names
         self.inputs = self.image_preprocess(self.input_names, mean_value = config.mean_value)
 
@@ -82,6 +88,21 @@ class ChainerBackend():
         cand = np.array(cand)
         return cand
 
+    def get_classify_output(self, topN = 5 ):
+        output = {}
+        predictions = self.output.data
+        for i, prediction in enumerate(predictions):
+            top_inds = prediction.argsort()[::-1][:topN]  # reverse sort and take five largest items
+            ps = []
+            for top_ind in top_inds:
+                ps.append((top_ind, float(prediction[top_ind])))
+            output[self.input_names[i]] = ps
+
+        return output
+
+    def get_layer_accuracy_output(self):
+        datas = {}
+
     def get_net_forward_perf(self):
         with chainer.function_hooks.TimerHook() as m:
             self.forward()
@@ -95,6 +116,10 @@ class ChainerBackend():
             call_his = m.call_history
             total_time_seconds = m.total_time()
             return [call_his,total_time_seconds]
+    def infer(self):
+
+        input_data = chainer.Variable(np.array(self.inputs,dtype=np.float32))
+        self.output = self.net(input_data)
 
     def forward(self):
 
