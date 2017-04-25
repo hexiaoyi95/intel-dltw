@@ -6,9 +6,9 @@
     },
     "application" : "applications.performance",
     "model" : {
-        "net" : "googlenet",
-	"path": "~/infer-perf-tool/models/bvlc_googlenet",
-	"weight": "~/infer-perf-tool/models/bvlc_googlenet/googlenet.model"
+        "net" : "ssd",
+	"path": "~/infer-perf-tool/models/ssd",
+	"weight": "~/infer-perf-tool/models/ssd/ssd.model"
     },
     "batch_size" : 1,
     "iteration" : 1,

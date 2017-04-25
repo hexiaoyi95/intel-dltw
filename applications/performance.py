@@ -66,6 +66,7 @@ def get_net_perf(direction, backend, config):
     for i in xrange(5):
         backend.forward()
         backend.backward()
+
     for i in xrange(int(config.iteration)):
         timer.start()
         go_through()
