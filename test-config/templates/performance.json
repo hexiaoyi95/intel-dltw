@@ -1,14 +1,16 @@
 {
     "backend" : {
-        "python_path" : "~/workspace/caffe/intel/python",
-        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "python_path" : "~/chainer/lib/python2.7/site-packages",
+        "class_path" : "backends.chainer_backend.ChainerBackend",
         "engine" : "default"
     },
     "application" : "applications.performance",
     "model" : {
-        "topology" : "~/workspace/caffe/intel/models/bvlc_googlenet/deploy.prototxt"
+        "net" : "googlenet",
+	"path": "~/infer-perf-tool/models/bvlc_googlenet",
+	"weight": "~/infer-perf-tool/models/bvlc_googlenet/googlenet.model"
     },
     "batch_size" : 1,
-    "iteration" : 4,
-    "out_dir" : "~/workspace/dltw/out/intel-caffe-batch4"
+    "iteration" : 1,
+    "out_dir" : "~/workspace/dltw/out/chainer-batch1"
 }

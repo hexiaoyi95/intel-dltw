@@ -6,23 +6,40 @@ from skimage.transform import resize
 os.environ['GLOG_minloglevel'] = '2'
 import chainer
 from chainer import serializers
+from chainer import function_hooks
 logger = logging.getLogger('root')
 import sys
-sys.path.insert(1,"/home/xiaoyihe/chainer-SSD")
-import ssd_net
 import bbox
 import ssd
 class ChainerBackend():
     def __init__(self, config):
         print "Use Chainer as backend."
-        self.net = ssd_net.SSD()
-        serializers.load_npz(config.model.weight,self.net)
+        if config.model.net == "googlenet":
+            sys.path.insert(1,os.path.expanduser(config.model.path))
+            googlenet = __import__("googlenet")
+            self.net = googlenet.GoogLeNet()
+        elif config.model.net == "ssd":
+            sys.path.insert(1,os.path.expanduser(config.model.path))
+            ssd = __import__("ssd_net")
+            self.net = ssd.SSD()
+        else:
+            raise Exception('Unsupported net type, choose googlenet or ssd')
+
+        if hasattr(config.model, 'weight'):
+            serializers.load_npz( os.path.expanduser(config.model.weight), self.net)
+            logger.debug("Loaded weight")
+
 
     def  shuffle_inputs(self):
+
         utils.benchmark.shuffle_inputs(self.inputs)
         utils.benchmark.shuffle_inputs(self.input_names)
 
         self.set_net_input(self.inputs)
+
+    def prepare_benchmark(self, config):
+        insize = self.net.insize
+        self.inputs = np.random.uniform(-1,1,(config.batch_size,3,insize, insize)).astype('f')
 
     def prepare_infer(self,img_names, config):
 
@@ -39,7 +56,7 @@ class ChainerBackend():
 
         inputs = [utils.io.load_image(im_f) for im_f in img_list]
 
-        resize_dims = self.net.insize;
+        resize_dims = self.net.insize
 
         inputs = [ resize(img,(resize_dims,resize_dims))*255 - mu for img in inputs]
 
@@ -65,13 +82,31 @@ class ChainerBackend():
         cand = np.array(cand)
         return cand
 
+    def get_net_forward_perf(self):
+        with chainer.function_hooks.TimerHook() as m:
+            self.forward()
+            call_his = m.call_history
+            total_time_seconds = m.total_time()
+            return [call_his,total_time_seconds]
 
+    def get_net_backward_perf(self):
+        with chainer.function_hooks.TimerHook() as m:
+            self.backward()
+            call_his = m.call_history
+            total_time_seconds = m.total_time()
+            return [call_his,total_time_seconds]
 
     def forward(self):
 
         input_data = chainer.Variable(np.array(self.inputs,dtype=np.float32))
 
-        self.net(input_data,1,1,1,1)
+        self.output = self.net(input_data)
+
+    def backward(self):
+        for i in xrange(len(self.output)):
+            self.output[i].grad = np.ones_like(self.output[i].data)
+
+	    self.output[0].backward()
 
 
 
