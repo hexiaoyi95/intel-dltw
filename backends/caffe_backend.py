@@ -177,11 +177,12 @@ class CaffeBackend():
         datas = {}
         weights = {}
         for key,value in self.net.blobs.iteritems():
-            datas[key] = value.data
+            datas[key + "_data"] = value.data
+            datas[key + "_diff"] = value.diff
 
         for key,value in self.net.params.iteritems():
             for index in xrange(len(value)):
-                param_key = key + '_' + str(index)
+                param_key = key  + "_params_" + str(index) + "_diff"
                 param = value[index]
                 weights[param_key] = param.diff
 

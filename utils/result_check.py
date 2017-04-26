@@ -186,7 +186,7 @@ def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, ch
         first_result = False
     ref_json = ref_dir + '/' + 'name.json'
     ref_batches_name = json2dict(ref_json)
-    
+
     for num, img_list in batch_name.iteritems():
         if not num in ref_batches_name :
             raise Exception('batch can not be found in reference data')
@@ -205,9 +205,9 @@ def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, ch
                 #print test_datas[key]
                 #print test_datas[key] - ref_data
             if first_result:
-                last_res[key] = [data_isequal]
+                last_res[key] = data_isequal
             else:
-                last_res[key][0] &= data_isequal
+                last_res[key] &= data_isequal
 
         for key in test_weights:
 
@@ -218,12 +218,12 @@ def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, ch
             if weight_isequal == False:
                 logger.debug(key)
                 #print test_weights[key] - ref_weight
-            layer_name = key[:-2]
+
             if first_result:
-                last_res[layer_name].append(weight_isequal)
+                last_res[key] = weight_isequal
             else:
-                last_res[layer_name][1] &= weight_isequal
-            
+                last_res[key] &= weight_isequal
+
 
     return last_res
 
