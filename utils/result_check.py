@@ -48,7 +48,7 @@ def isEqualPrediction(pred, ref_pred):
         if p[0] != rp[0]:
             res[0] = False
 
-        if not iscloseFP(p[1], rp[1]):
+        if not np.allclose(p[1], rp[1],  rtol=1e-03, atol=1e-0, equal_nan = True):
             res[1] = False
 
         results.append(res[:])

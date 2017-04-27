@@ -12,7 +12,7 @@ class CaffeBackend():
         # "Use Caffe as backend."
         # caffe constructor: network_file, phase, level, stages, weight, engine
         topology_path = os.path.expanduser(str(config.model.topology))
-        if  (hasattr(config, 'engine')) and (config.engine != "default"):
+        if  (hasattr(config.backend, 'engine')) and (config.backend.engine != "default"):
             engine = str(config.backend.engine)
         else:
             engine = None
@@ -30,6 +30,7 @@ class CaffeBackend():
 
         caffe.set_mode_cpu()
         try:
+            logger.debug("using engine: {}".format(engine))
             self.net = caffe.Net(topology_path, phase, weights=weight_path, engine=engine)
         except:
             self.net = caffe.Net(topology_path, phase, weights=weight_path)
