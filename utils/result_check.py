@@ -193,7 +193,7 @@ def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, ch
 
         for key in test_datas:
             ref_data = np.load(ref_dir + '/' + num + '/' + key + '_' + 'datas' + '.npy')
-            data_isequal= np.allclose(test_datas[key], ref_data,  rtol=1e-03, atol=1e-0, equal_nan = True)
+            data_isequal= np.allclose(test_datas[key], ref_data,  rtol=1e-01, atol=0, equal_nan = True)
 
             if data_isequal == False:
                 print key
@@ -207,12 +207,11 @@ def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, ch
 
             ref_weight = np.load(ref_dir + '/' + num + '/' + key + '_' + 'weights' + '.npy')
 
-            weight_isequal= np.allclose(test_weights[key], ref_weight, rtol=1e-03, atol=1e-0, equal_nan = True)
+            weight_isequal= np.allclose(test_weights[key], ref_weight, rtol=1e-01, atol=0, equal_nan = True)
 
             if weight_isequal == False:
                 print key
                 #print test_weights[key] - ref_weight
-
             res[1] &= weight_isequal
 
     return res

@@ -213,7 +213,7 @@ class CaffeBackend():
         for i in xrange(len(self.net.outputs)):
             #print self.net.outputs[i]
             diff = np.zeros_like(self.net.blobs[self.net.outputs[i]].diff)
-            diff += 1
+            diff += 1000
             top_diff[self.net.outputs[i]] = diff[...]
         self.net.backward(**top_diff)
 
