@@ -8,46 +8,57 @@ from backends import backends_factory
 import pprint
 logger = logging.getLogger()
 
-def get_layer_perf(layer_id, direction, backend, config):
-    if direction == "forward":
-        go_through = backend.forward_layer
-    elif direction == "backward":
-        go_through = backend.backward_layer
-    else:
-        raise Exception('Expect forward or backward but get {}'.format(direction))
+# def get_layer_perf(layer_id, direction, backend, config):
+#     if direction == "forward":
+#         go_through = backend.forward_layer
+#     elif direction == "backward":
+#         go_through = backend.backward_layer
+#     else:
+#         raise Exception('Expect forward or backward but get {}'.format(direction))
 
-    backend.prepare_benchmark(config)
+#     backend.prepare_benchmark(config)
 
-    elapsed_ms_list = []
-    timer = Timer()
-    for i in xrange(int(config.iteration)):
-        timer.start()
-        go_through(layer_id)
-        timer.stop()
-        elapsed_ms_list.append(timer.milliseconds())
+#     elapsed_ms_list = []
+#     timer = Timer()
+#     for i in xrange(int(config.iteration)):
+#         timer.start()
+#         go_through(layer_id)
+#         timer.stop()
+#         elapsed_ms_list.append(timer.milliseconds())
 
-    avg_time = utils.benchmark.performance_analysis(elapsed_ms_list)[0]
-    FPS = config.batch_size / (avg_time / 1000.0)
-    return [backend.get_layer_name(layer_id), backend.get_layer_type(layer_id), avg_time, FPS]
+#     avg_time = utils.benchmark.performance_analysis(elapsed_ms_list)[0]
+#     FPS = config.batch_size / (avg_time / 1000.0)
+#     return [backend.get_layer_name(layer_id), backend.get_layer_type(layer_id), avg_time, FPS]
 
 def get_layers_perf(direction, backend, config):
     """
     return
         per layer forward or backward time: [(layer name, layer type, elapsed_time, FPS), ... ]
     """
-    total_time = 0.0
     layers_perf = []
-    layer_ids = range(len(backend.layers()))
-    if direction == 'backward':
-	layer_ids = range(len(backend.layers), -1, -1)
+    elapsed_ms_list = []
+    for i in xrange(int(config.iteration)):
+        backend.prepare_benchmark(config)
+        [layers_time,net_time]=backend.get_layers_perf(direction)
 
-    for layer_id in layer_ids:
-        layer_perf = get_layer_perf(layer_id, direction, backend, config)
-        total_time += layer_perf[2]
+        elapsed_s_layers_list = [[] for l in xrange(len(layers_time))]
+        elapsed_ms_list.append(net_time)
+
+        for j in xrange(len(layers_time)):
+            elapsed_s_layers_list[j].append(layers_time[j][1])
+
+    for k in xrange(len(elapsed_s_layers_list)):
+        func_name = layers_time[k][0]
+        avg_time = utils.benchmark.performance_analysis(elapsed_s_layers_list[k])[0]
+        layer_perf = [func_name, avg_time]
         layers_perf.append(layer_perf)
 
-    FPS = config.batch_size / (total_time / 1000.0)
-    layers_perf.append(['total', 'summary ', total_time, FPS])
+    net_avg_time = utils.benchmark.performance_analysis(elapsed_ms_list)[0]
+    net_FPS = config.batch_size / ( net_avg_time / 1000 )
+    net_perf = [net_avg_time,net_FPS]
+
+    layers_perf.append(['total', 'summary ', net_avg_time, net_FPS])
+
     return layers_perf
 
 def get_net_perf(direction, backend, config):
@@ -63,11 +74,13 @@ def get_net_perf(direction, backend, config):
         raise Exception('Expect forward or backward but get {}'.format(direction))
     elapsed_ms_list = []
     timer = Timer()
-    for i in xrange(5):
+    for i in xrange(1):
+        backend.prepare_benchmark(config)
         backend.forward()
         backend.backward()
 
     for i in xrange(int(config.iteration)):
+        backend.prepare_benchmark(config)
         timer.start()
         go_through()
         timer.stop()
@@ -77,63 +90,63 @@ def get_net_perf(direction, backend, config):
     FPS = config.batch_size / (avg_time / 1000.0)
     return avg_time, FPS
 
-def get_chainer_perf(backend, config):
-    """
-    return
-          net forward and backward time
-    """
-    backend.prepare_benchmark(config)
-    layers_perf_for_back = []
-    net_perf_for_back = []
+# def get_chainer_layers_perf(direction, backend, config):
+#     """
+#     return
+#           net forward and backward time
+#     """
+#     backend.prepare_benchmark(config)
+#     layers_perf_for_back = []
+#     net_perf_for_back = []
 
-    elapsed_s_list = []
-    for i in xrange(1):
-        backend.prepare_benchmark(config)
-        backend.forward()
-        backend.backward()
+#     elapsed_ms_list = []
+#     for i in xrange(1):
+#         backend.prepare_benchmark(config)
+#         backend.forward()
+#         backend.backward()
 
-    [layers_f_time,net_f_time]=backend.get_net_forward_perf()
-    [layers_b_time,net_b_time]=backend.get_net_backward_perf()
-    layers_time = [layers_f_time, layers_b_time]
+#     [layers_f_time,net_f_time]=backend.get_net_forward_perf()
+#     [layers_b_time,net_b_time]=backend.get_net_backward_perf()
+#     layers_time = [layers_f_time, layers_b_time]
 
-    # if len(layers_f_time) != len(layers_b_time):
-    #     raise Exception('the number of forward layers is not equal backward layers')
-
-
-    for index in range(2):
-        layers_perf = []
-        for i in xrange(int(config.iteration)):
-
-            if index == 0:
-                [layers_time,net_time]=backend.get_net_forward_perf()
-            else:
-                [layers_time,net_time]=backend.get_net_backward_perf()
-
-            elapsed_s_layers_list = [[] for l in xrange(len(layers_time))]
-            elapsed_s_list.append(net_time * 1000)
-
-            for j in xrange(len(layers_time)):
-                elapsed_s_layers_list[j].append(layers_time[j][1] * 1000)
-
-            logger.debug("Done for %d/%d" % (i + 1, config.iteration))
-
-        for k in xrange(len(elapsed_s_layers_list)):
-            class_name = str(type(layers_time[k][0]))
-            function_name = class_name.split('.')[3]
-            avg_time = utils.benchmark.performance_analysis(elapsed_s_layers_list[k])[0]
-            FPS = config.batch_size / ( avg_time / 1000)
-            layer_perf = [function_name, avg_time, FPS]
-            layers_perf.append(layer_perf)
-
-        net_avg_time = utils.benchmark.performance_analysis(elapsed_s_list)[0]
-        net_FPS = config.batch_size / ( net_avg_time / 1000 )
-        net_perf = [net_avg_time,net_FPS]
-
-        layers_perf_for_back.append(layers_perf)
-        net_perf_for_back.append(net_perf)
+#     # if len(layers_f_time) != len(layers_b_time):
+#     #     raise Exception('the number of forward layers is not equal backward layers')
 
 
-    return layers_perf_for_back,net_perf_for_back
+#     for index in range(2):
+#         layers_perf = []
+#         for i in xrange(int(config.iteration)):
+
+#             if index == 0:
+#                 [layers_time,net_time]=backend.get_net_forward_perf()
+#             else:
+#                 [layers_time,net_time]=backend.get_net_backward_perf()
+
+#             elapsed_s_layers_list = [[] for l in xrange(len(layers_time))]
+#             elapsed_ms_list.append(net_time * 1000)
+
+#             for j in xrange(len(layers_time)):
+#                 elapsed_s_layers_list[j].append(layers_time[j][1] * 1000)
+
+#             logger.debug("Done for %d/%d" % (i + 1, config.iteration))
+
+#         for k in xrange(len(elapsed_s_layers_list)):
+#             class_name = str(type(layers_time[k][0]))
+#             function_name = class_name.split('.')[3]
+#             avg_time = utils.benchmark.performance_analysis(elapsed_s_layers_list[k])[0]
+#             FPS = config.batch_size / ( avg_time / 1000)
+#             layer_perf = [function_name, avg_time, FPS]
+#             layers_perf.append(layer_perf)
+
+#         net_avg_time = utils.benchmark.performance_analysis(elapsed_ms_list)[0]
+#         net_FPS = config.batch_size / ( net_avg_time / 1000 )
+#         net_perf = [net_avg_time,net_FPS]
+
+#         layers_perf_for_back.append(layers_perf)
+#         net_perf_for_back.append(net_perf)
+
+
+#     return layers_perf_for_back,net_perf_for_back
 
 
 def run(config):
@@ -144,18 +157,11 @@ def run(config):
     """
     backend_class = backends_factory(config.backend)
     backend = backend_class(config)
-    if config.backend.class_path.rsplit('.', 1)[1] != "ChainerBackend":
-        layers_forward_perf = get_layers_perf('forward', backend, config)
-        layers_backward_perf = get_layers_perf('backward', backend, config)
-        net_forward_perf = get_net_perf('forward', backend, config)
-        net_backward_perf = get_net_perf('backward', backend, config)
+    layers_forward_perf = get_layers_perf('forward', backend, config)
+    layers_backward_perf = get_layers_perf('backward', backend, config)
+    net_forward_perf = get_net_perf('forward', backend, config)
+    net_backward_perf = get_net_perf('backward', backend, config)
 
-    else:
-        perf = get_chainer_perf(backend, config)
-        layers_forward_perf = perf[0][0]
-        layers_backward_perf = perf[0][1]
-        net_forward_perf = perf[1][0]
-        net_backward_perf = perf[1][1]
 
     res_dict = {
             'layers_forward_perf' : layers_forward_perf,

@@ -2,6 +2,7 @@ import numpy as np
 import utils
 import logging
 import os
+import heapq
 from skimage.transform import resize
 os.environ['GLOG_minloglevel'] = '2'
 import chainer
@@ -66,7 +67,7 @@ class ChainerBackend():
 
         inputs = [ resize(img,(resize_dims,resize_dims))*255 - mu for img in inputs]
 
-        inputs = [ img.transpose(2,0,1)[::-1] for img in inputs ]
+        inputs = [ img.transpose(2,0,1) for img in inputs ]
 
         return inputs
 
@@ -90,7 +91,8 @@ class ChainerBackend():
 
     def get_classify_output(self, topN = 5 ):
         output = {}
-        predictions = self.output.data
+        predictions = F.softmax(self.output)
+        predictions = predictions.data
         for i, prediction in enumerate(predictions):
             top_inds = prediction.argsort()[::-1][:topN]  # reverse sort and take five largest items
             ps = []
@@ -102,20 +104,68 @@ class ChainerBackend():
 
     def get_layer_accuracy_output(self):
         datas = {}
+        weights = {}
 
-    def get_net_forward_perf(self):
+        if self.output.creator is None:
+            return
+        cand_funcs = []
+        seen_set = set()
+        seen_vars = set()
+        func_num = 0
+        def add_cand(cand):
+            if cand not in seen_set:
+                heapq.heappush(cand_funcs,(-cand.rank, len(seen_set), cand))
+                seen_set.add(cand)
+
+        add_cand(self.output.creator)
+        inputs = {}
+        while cand_funcs:
+            _,_, func = heapq.heappop(cand_funcs)
+            func_num += 1
+            outputs = [y() for y in func.outputs]
+            num = len(datas)
+            func_name = str(type(func)).split('.')[3]
+
+            for i, y in enumerate(outputs):
+                seen_vars.add(id(y))
+                datas[str(func_num) + "_" + func_name + "_" +str(i + 1)  + "_data"] = y.data
+                datas[str(func_num) + "_" + func_name + "_" +str(i + 1)  + "_diff"] = y.grad
+
+            for i,x in enumerate(func.inputs):
+
+                inputs[str(func_num) + "_" + func_name + "_" + str(i +1) ] = x
+
+                if x.creator is not None:
+                    add_cand(x.creator)
+
+        for key in inputs:
+            x = inputs[key]
+            if x.name is not None and id(x) not in seen_vars:
+                weights[key + "_params_" + x.name +"_diff"] = x.grad
+
+        return datas, weights
+
+
+    def get_layers_perf(self,direction):
         with chainer.function_hooks.TimerHook() as m:
-            self.forward()
+            if direction == "forward":
+                self.forward()
+            elif direction == "backward":
+                self.backward()
             call_his = m.call_history
             total_time_seconds = m.total_time()
-            return [call_his,total_time_seconds]
 
-    def get_net_backward_perf(self):
-        with chainer.function_hooks.TimerHook() as m:
-            self.backward()
-            call_his = m.call_history
-            total_time_seconds = m.total_time()
-            return [call_his,total_time_seconds]
+        call = []
+        for i,l in enumerate(call_his):
+            func_type = type(l[0])
+            name = str(func_type).split(".")[3]
+            ms_time = l[1]* 1000
+            call.append([name,ms_time])
+
+        return [call,total_time_seconds * 1000]
+
+
+
     def infer(self):
 
         input_data = chainer.Variable(np.array(self.inputs,dtype=np.float32))
@@ -124,14 +174,12 @@ class ChainerBackend():
     def forward(self):
 
         input_data = chainer.Variable(np.array(self.inputs,dtype=np.float32))
-
         self.output = self.net(input_data)
 
     def backward(self):
-        for i in xrange(len(self.output)):
-            self.output[i].grad = np.ones_like(self.output[i].data)
-
-	    self.output[0].backward()
+        self.net.cleargrads()
+        self.output.grad = np.ones_like(self.output.data)
+        self.output.backward(retain_grad = True)
 
 
 

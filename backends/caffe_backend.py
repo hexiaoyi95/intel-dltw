@@ -2,18 +2,18 @@ import numpy as np
 import utils
 import logging
 import os
-
+from utils.benchmark import Timer
 # os.environ['GLOG_minloglevel'] = '2'
 import caffe
 import inspect
 logger = logging.getLogger('root')
 class CaffeBackend():
     def __init__(self, config):
-        # "Use Caffe as backend."
+        # "Use Caffe as self."
         # caffe constructor: network_file, phase, level, stages, weight, engine
         topology_path = os.path.expanduser(str(config.model.topology))
         if  (hasattr(config, 'engine')) and (config.engine != "default"):
-            engine = str(config.backend.engine)
+            engine = str(config.self.engine)
         else:
             engine = None
 
@@ -23,7 +23,7 @@ class CaffeBackend():
             weight_path = None
 
         if config.application == "applications.performance":
-            logger.debug("backend for performance")
+            logger.debug("self for performance")
             phase = caffe.TRAIN
         else:
             phase = caffe.TEST
@@ -34,7 +34,7 @@ class CaffeBackend():
         except:
             self.net = caffe.Net(topology_path, phase, weights=weight_path)
 
-    def  shuffle_inputs(self):
+    def shuffle_inputs(self):
         utils.benchmark.shuffle_inputs(self.inputs)
         utils.benchmark.shuffle_inputs(self.input_names)
 
@@ -172,12 +172,48 @@ class CaffeBackend():
 
         return output
 
+    def get_layer_perf(self,layer_id, direction):
+
+        if direction == "forward":
+            go_through = self.forward_layer
+        elif direction == "backward":
+            go_through = self.backward_layer
+        else:
+            raise Exception('Expect forward or backward but get {}'.format(direction))
+
+        timer = Timer()
+
+        timer.start()
+        go_through(layer_id)
+        timer.stop()
+
+        return [self.get_layer_name(layer_id), timer.milliseconds()]
+
+    def get_layers_perf(self, direction):
+        """
+        return
+            per layer forward or backward time: [(layer name, layer type, elapsed_time, FPS), ... ]
+        """
+        total_time = 0.0
+        layers_perf = []
+        layer_ids = range(len(self.layers()))
+        if direction == 'backward':
+            layer_ids = range(len(self.layers())-1, -1, -1)
+
+        for layer_id in layer_ids:
+            layer_perf = self.get_layer_perf(layer_id, direction)
+            total_time += layer_perf[1]
+            layers_perf.append(layer_perf)
+
+        return [layers_perf, total_time]
+
     def get_layer_accuracy_output(self):
 
         datas = {}
         weights = {}
         for key,value in self.net.blobs.iteritems():
-            datas[key] = value.data
+            datas[key + "data"] = value.data
+            datas[key + "diff"] = value.diff
 
         for key,value in self.net.params.iteritems():
             for index in xrange(len(value)):
@@ -186,6 +222,7 @@ class CaffeBackend():
                 weights[key] = param.diff
 
         return datas,weights
+
     def layers(self):
         return self.net.layers
 
