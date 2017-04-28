@@ -1,0 +1,51 @@
+{
+    "name" : "image-classification",
+
+    "app_templates": ["test-config/templates/image_classification_accuracy.json"],
+
+    "backends": [
+    {
+        "name": "intel-caffe-default",
+        "python_path" : "dl-frameworks/intel-caffe/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "default"
+    },
+    {
+        "name": "intel-caffe-MKL2017",
+        "python_path" : "dl-frameworks/intel-caffe/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "MKL2017"
+    },
+    {
+        "name": "intel-caffe-MKLDNN",
+        "python_path" : "dl-frameworks/intel-caffe/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "MKLDNN"
+    }
+    ],
+
+    "models": [
+    {
+        "name": "alexnet",
+        "topology" : "dl-models/caffe/alexnet/deploy.prototxt",
+        "weight" : "dl-models/caffe/alexnet/alexnet.caffemodel"
+    },
+    {
+        "name": "googlenet_v1",
+        "topology" : "dl-models/caffe/googlenet_v1/deploy.prototxt" ,
+        "weight" : "dl-models/caffe/googlenet_v1/googlenet_v1.caffemodel"
+    },
+    {
+        "name": "googlenet_v2",
+        "topology" : "dl-models/caffe/googlenet_v2/deploy.prototxt",
+        "weight" : "dl-models/caffe/googlenet_v2/googlenet_v2.caffemodel"
+    },
+    {
+        "name": "resnet_50",
+        "topology" : "dl-models/caffe/resnet_50/deploy.prototxt",
+        "weight" : "dl-models/caffe/resnet_50/resnet_50.caffemodel"
+    }
+    ],
+
+    "batch_sizes": [1, 2]
+}

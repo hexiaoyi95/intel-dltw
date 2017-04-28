@@ -1,16 +1,16 @@
 {
     "backend" : {
-        "python_path" : "~/intel-caffe/python",
+        "python_path" : "dl-frameworks/intel-caffe/python",
         "class_path" : "backends.caffe_backend.CaffeBackend",
         "engine" : "default"
     },
     "application" : "applications.obj_detection.infer",
     "test_type" : "accuracy",
     "model" : {
-        "topology" : "~/infer-perf-tool/models/ssd/deploy.prototxt" ,
-        "weight" : "~/infer-perf-tool/models/ssd/VGG_VOC0712_SSD_300x300_iter_120000.caffemodel"
+        "topology" : "dl-models/caffe/ssd/deploy.prototxt" ,
+        "weight" : "dl-models/caffe/ssd/VGG_VOC0712_SSD_300x300_iter_120000.caffemodel"
     },
-    "input_path" : "/home/xiaoyihe/infer-perf-tool/data/VOC0712_test/test.txt",
+    "input_path" : "dl-data/VOC0712_test/test.txt",
     "mean_value" : [104,117,123],
     "batch_size" : 4,
     "iteration" : 1,

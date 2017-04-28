@@ -1,14 +1,14 @@
 {
     "backend" : {
-        "python_path" : "~/workspace/caffe/intel/python",
+        "python_path" : "dl-frameworks/intel-caffe/python",
         "class_path" : "backends.caffe_backend.CaffeBackend",
-        "engine" : "default"
+        "engine" : "MKL2017"
     },
     "application" : "applications.performance",
     "model" : {
-        "topology" : "~/workspace/caffe/intel/models/bvlc_googlenet/deploy.prototxt"
+        "topology" : "dl-models/caffe/bvlc_googlenet/force_backward_deploy.ptototxt"
     },
-    "batch_size" : 1,
+    "batch_size" : 2,
     "iteration" : 4,
-    "out_dir" : "~/workspace/dltw/out/intel-caffe-batch4"
+    "out_dir" : "out/intel-caffe-mkl2017-bvlc_googlenet-2/"
 }

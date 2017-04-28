@@ -41,10 +41,14 @@ def test_inference_accuracy(backend, config):
     out_file = os.path.join(config.out_dir, 'accuracy.json')
     utils.io.dict2json(outputs, out_file)
 
-    res = check_classify_result(out_file, config.reference.result_file)
-    pprint.pprint(res)
-    res_check_file = os.path.join(config.out_dir, 'check.json')
-    utils.io.dict2json(res, res_check_file)
+    if hasattr(config, 'reference'):
+        if not os.path.exists(config.reference.out_file):
+            logger.info('reference not found: {}'.format(config.reference.out_file))
+            return
+        res = check_classify_result(out_file, config.reference.out_file)
+        logger.debug(pprint.pformat(res))
+        res_check_file = os.path.join(config.out_dir, 'check.json')
+        utils.io.dict2json(res, res_check_file)
 
 def run(config):
     backend_class = backends_factory(config.backend)
