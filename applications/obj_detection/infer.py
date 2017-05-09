@@ -45,7 +45,7 @@ def test_inference_accuracy(backend, config):
         count = count + 1
         if count % 2 == 0 or count == total_batches :
             logging.info("Done for %d/%d batches" % (count,total_batches))
-
+    print outputs
     out_file = os.path.join(config.out_dir, 'accuracy.json')
     utils.io.dict2json(outputs, out_file)
 

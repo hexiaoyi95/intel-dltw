@@ -1,6 +1,6 @@
 {
     "backend" : {
-        "python_path" : "~/intel-caffe/python",
+        "python_path" : "~/workspace/caffe/intel/python",
         "class_path" : "backends.caffe_backend.CaffeBackend",
         "engine" : "default"
     },
@@ -14,10 +14,10 @@
     "mean_value" : [104,117,123],
     "batch_size" : 4,
     "iteration" : 1,
-    "out_dir" : "~/dltw/out/intel-caffe-batch1",
+    "out_dir" : "~/workspace/dltw/out/intel-caffe-batch1",
     "is_ref": false,
     "reference" : {
-        "config" : "~/dltw/test-config/templates/obj-detection-infer-accuracy-template.json",
-        "result_file" : "~/dltw/out/ref/accuracy.json"
+        "config" : "~/workspace/dltw/test-config/templates/obj-detection-infer-accuracy-template.json",
+        "result_file" : "~/workspace/dltw/out/ref/accuracy.json"
     }
 }

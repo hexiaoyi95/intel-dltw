@@ -76,7 +76,12 @@ def isEqualDetection(detec, ref_detec_):
         iou = []
         for j in range(len(ref_detec)):
             iou.append(IOU(detec[i][2:], ref_detec[j][2:]))
-        max_iou = max(iou)
+        if len(iou) > 0:
+            max_iou = max(iou)
+            if max_iou < 0.5:
+                continue
+        else:
+            continue
         #pprint.pprint(iou)
         index = iou.index(max_iou)
         #print i,index
@@ -85,6 +90,7 @@ def isEqualDetection(detec, ref_detec_):
 
         if detec[i][1] != ref_detec[index][1]:
             res[2] = False
+            print detec[i][1],ref_detec[index][1]
 
         if iou < 0.99:
             res[3] = False
@@ -189,7 +195,7 @@ def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, ch
 
         for img in img_list:
             if not img in ref_batches_name[num]:
-                raise Exception('imgage in batch %s can not be found in reference data ' % (num))
+                raise Exception('image in batch %s can not be found in reference data ' % (num))
 
     for key in test_datas:
         ref_data = np.load(ref_dir + '/' + num + '/' + key + '_' + 'datas' + '.npy')

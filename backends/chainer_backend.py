@@ -33,7 +33,7 @@ class ChainerBackend():
             logger.debug("Loaded weight")
 
 
-    def  shuffle_inputs(self):
+    def shuffle_inputs(self):
 
         utils.benchmark.shuffle_inputs(self.inputs)
         utils.benchmark.shuffle_inputs(self.input_names)
@@ -41,11 +41,13 @@ class ChainerBackend():
         self.set_net_input(self.inputs)
 
     def prepare_benchmark(self, config):
+        """
+        generate random input data
+        """
         insize = self.net.insize
         self.inputs = np.random.uniform(-1,1,(config.batch_size,3,insize, insize)).astype('f')
 
     def prepare_infer(self,img_names, config):
-
         self.input_names = img_names
         self.inputs = self.image_preprocess(self.input_names, mean_value = config.mean_value)
 
@@ -54,6 +56,9 @@ class ChainerBackend():
         self.inputs = self.image_preprocess(self.input_names, mean_value = config.mean_value)
 
     def image_preprocess(self,img_list,**kwargs):
+        """
+        Load images and transform input to chainer input
+        """
 
         if "mean_file" in kwargs:
             mu = np.load(kwargs['mean_file']).mean(1).mean(1)
@@ -72,6 +77,10 @@ class ChainerBackend():
         return inputs
 
     def get_detection_output(self, nms_th=0.45, cls_th=0.6):
+
+        output = dict()
+        ps = [[] for i in range(len(self.input_names))]
+
         prior = self.net.mbox_prior.astype(np.float32)
         loc = self.net.mbox_loc.data[0]
         conf = self.net.mbox_conf_softmax_reahpe.data[0]
@@ -84,12 +93,20 @@ class ChainerBackend():
             cand_loc = loc#[cand_score]
             k = bbox.nms(cand_loc, scores, nms_th, 300)
             for i in k:
+                if scores[i] > cls_th:
+                    cand.append(np.hstack([[label], [scores[i]], cand_loc[i]]))
+                    ps[0].append((float(scores[i]), int(label), float(cand_loc[i][0]), float(cand_loc[i][1]), float(cand_loc[i][2]),float(cand_loc[i][3])))
+        output[self.input_names[0]] = ps[0]
 
-                cand.append(np.hstack([[label], [scores[i]], cand_loc[i]]))
-        cand = np.array(cand)
-        return cand
+        return output
 
     def get_classify_output(self, topN = 5 ):
+        """
+        Return : dict for images prediction
+        {
+            'image_name', [ (label_1, prob_1), (label_2, prob_2) ]
+        }
+        """
         output = {}
         predictions = F.softmax(self.output)
         predictions = predictions.data
@@ -103,6 +120,13 @@ class ChainerBackend():
         return output
 
     def get_layer_accuracy_output(self):
+        """
+        Return:
+            [
+                {"variable_name": data, ... ,"variable_name": data},
+                {"parameter_name": data, ... ,"parameter_name": data}
+            ]
+        """
         datas = {}
         weights = {}
 
@@ -147,6 +171,16 @@ class ChainerBackend():
 
 
     def get_layers_perf(self,direction):
+        """
+        Parameters:
+            direction: forward or backward
+        Return:
+            list:
+                [
+                    [[function_name,time_ms]...[function_name,time_ms]],
+                    total_time_ms
+                ]
+        """
         with chainer.function_hooks.TimerHook() as m:
             if direction == "forward":
                 self.forward()
@@ -177,6 +211,9 @@ class ChainerBackend():
         self.output = self.net(input_data)
 
     def backward(self):
+        """
+        first clear the grad ,then set the output's grad to 1 and do backward
+        """
         self.net.cleargrads()
         self.output.grad = np.ones_like(self.output.data)
         self.output.backward(retain_grad = True)
