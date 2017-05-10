@@ -13,4 +13,4 @@ backend = backend_class()
 img = ['/home/xiaoyihe/chainer-SSD/img/fish-bike.jpg','/home/xiaoyihe/chainer-SSD/img/dog.jpg']
 backend.prepare_infer(img, config)
 backend.infer()
-backend.get_detection_output()
+

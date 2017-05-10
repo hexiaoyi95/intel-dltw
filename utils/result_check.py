@@ -76,7 +76,12 @@ def isEqualDetection(detec, ref_detec_):
         iou = []
         for j in range(len(ref_detec)):
             iou.append(IOU(detec[i][2:], ref_detec[j][2:]))
-        max_iou = max(iou)
+        if len(iou) > 0:
+            max_iou = max(iou)
+            if max_iou < 0.5:
+                continue
+        else:
+            continue
         #pprint.pprint(iou)
         index = iou.index(max_iou)
         #print i,index
@@ -85,6 +90,7 @@ def isEqualDetection(detec, ref_detec_):
 
         if detec[i][1] != ref_detec[index][1]:
             res[2] = False
+            print detec[i][1],ref_detec[index][1]
 
         if iou < 0.99:
             res[3] = False
@@ -193,27 +199,39 @@ def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, ch
 
         for img in img_list:
             if not img in ref_batches_name[num]:
-                raise Exception('imgage in batch %s can not be found in reference data ' % (num))
+                raise Exception('image in batch %s can not be found in reference data ' % (num))
 
-        for key in test_datas:
-            ref_data = np.load(ref_dir + '/' + num + '/' + key + '_' + 'datas' + '.npy')
-            data_isequal= np.allclose(test_datas[key], ref_data,  rtol=1e-03, atol=1e-0, equal_nan = True)
+    for key in test_datas:
+        ref_data = np.load(ref_dir + '/' + num + '/' + key + '_' + 'datas' + '.npy')
 
-            if data_isequal == False:
-                logger.debug(key)
-                #print abs(test_datas[key] - ref_data)
-                #print test_datas[key]
-                #print test_datas[key] - ref_data
-            if first_result:
-                last_res[key] = data_isequal
-            else:
-                last_res[key] &= data_isequal
+        if np.average(ref_data) < 1e-06 and np.average(test_datas[key]) < 1e-06:
+            data_isequal = True
+        else:
+            data_isequal = np.allclose(test_datas[key], ref_data,  rtol=1e-01, atol=0, equal_nan = True)
+
+        if data_isequal == False:
+            logger.debug(key)
+            #print abs(test_datas[key] - ref_data)
+            #print test_datas[key]
+            #print test_datas[key] - ref_data
+        if first_result:
+            last_res[key] = data_isequal
+        else:
+            last_res[key] &= data_isequal
 
         for key in test_weights:
 
             ref_weight = np.load(ref_dir + '/' + num + '/' + key + '_' + 'weights' + '.npy')
+            if np.average(ref_weight) < 1e-06 and np.average(test_weights[key]) < 1e-06:
+                weight_isequal = True
+            else:
+                weight_isequal= np.allclose(test_weights[key], ref_weight, rtol=1e-01, atol=0, equal_nan = True)
 
-            weight_isequal= np.allclose(test_weights[key], ref_weight, rtol=1e-03, atol=1e-0, equal_nan = True)
+
+            
+           
+          
+
 
             if weight_isequal == False:
                 logger.debug(key)
@@ -223,6 +241,7 @@ def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, ch
                 last_res[key] = weight_isequal
             else:
                 last_res[key] &= weight_isequal
+
 
 
     return last_res

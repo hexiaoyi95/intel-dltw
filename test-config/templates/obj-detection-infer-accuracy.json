@@ -5,6 +5,9 @@
         "engine" : "default"
     },
     "application" : "applications.obj_detection.infer",
+        "engine" : "default"
+    },
+    "application" : "applications.obj_detection.infer",
     "test_type" : "accuracy",
     "model" : {
         "topology" : "dl-models/caffe/ssd/deploy.prototxt" ,
@@ -14,10 +17,10 @@
     "mean_value" : [104,117,123],
     "batch_size" : 4,
     "iteration" : 1,
-    "out_dir" : "~/dltw/out/intel-caffe-batch1",
+    "out_dir" : "out/intel-caffe-batch1",
     "is_ref": false,
     "reference" : {
-        "config" : "~/dltw/test-config/templates/obj-detection-infer-accuracy-template.json",
-        "result_file" : "~/dltw/out/ref/accuracy.json"
+        "config" : "test-config/templates/obj-detection-infer-accuracy-template.json",
+        "result_file" : "out/ref/accuracy.json"
     }
 }
