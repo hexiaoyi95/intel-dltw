@@ -17,9 +17,6 @@ class CaffeBackend():
         else:
             engine = None
 
-        else:
-            engine = None
-
         if hasattr(config.model, 'weight'):
             weight_path = os.path.expanduser(str(config.model.weight))
         else:
@@ -214,18 +211,22 @@ class CaffeBackend():
     def get_layer_accuracy_output(self):
 
         datas = {}
-        weights = {}
+        diffs = {}
+        count = 0
         for key,value in self.net.blobs.iteritems():
-            datas[key + "_data"] = value.data
-            datas[key + "_diff"] = value.diff
+            count +=1
+            datas['%04d' % (count) +"_" + key + "_data"] = value.data
+            diffs['%04d' % (count) +"_" + key + "_diff"] = value.diff
+        count = 0
 
         for key,value in self.net.params.iteritems():
+            count +=1
             for index in xrange(len(value)):
-                param_key = key  + "_params_" + str(index) + "_diff"
+                param_key = '%04d' % (count) +"_" + key  + "_params_" + str(index) + "_diff"
                 param = value[index]
-                weights[param_key] = param.diff
+                diffs[param_key] = param.diff
 
-        return datas,weights
+        return datas,diffs
 
     def layers(self):
         return self.net.layers

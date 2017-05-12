@@ -1,7 +1,7 @@
 from utils.io import json2dict
 import numpy as np
 import logging
-logger = logging.getLogger()
+logger = logging.getLogger('root')
 PRECISION = 1e-4
 import pprint
 def iscloseFP(a, b, precision=PRECISION):
@@ -184,12 +184,14 @@ def check_detection_result(test_file,reference_file,):
     return res_as_dict_for_obj(results)
 
 
-def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, check_result):
+def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, check_result):
     last_res = check_result
+    flag = 0
     if len(last_res) == 0:
         first_result = True
     else:
         first_result = False
+
     ref_json = ref_dir + '/' + 'name.json'
     ref_batches_name = json2dict(ref_json)
 
@@ -200,47 +202,46 @@ def check_layer_accuracy_result(batch_name, test_datas, test_weights,ref_dir, ch
         for img in img_list:
             if not img in ref_batches_name[num]:
                 raise Exception('image in batch %s can not be found in reference data ' % (num))
+    ordered_key = sorted(test_datas.keys(),key = lambda item:item.split('_')[0])
 
-    for key in test_datas:
+    for key in ordered_key:
         ref_data = np.load(ref_dir + '/' + num + '/' + key + '_' + 'datas' + '.npy')
 
         if np.average(ref_data) < 1e-06 and np.average(test_datas[key]) < 1e-06:
             data_isequal = True
         else:
-            data_isequal = np.allclose(test_datas[key], ref_data,  rtol=1e-01, atol=0, equal_nan = True)
+            data_isequal = np.allclose(test_datas[key], ref_data,  rtol=1e-02, atol=0, equal_nan = True)
 
-        if data_isequal == False:
-            logger.debug(key)
-            #print abs(test_datas[key] - ref_data)
-            #print test_datas[key]
-            #print test_datas[key] - ref_data
         if first_result:
             last_res[key] = data_isequal
         else:
+            if data_isequal == False and flag == 0:
+                logger.debug('error occur from  '  + key)
+                last_res['first_error'] = key
+                #print key
+                #print test_datas[key] - ref_data
+                flag = 1
             last_res[key] &= data_isequal
 
-        for key in test_weights:
+    ordered_key = sorted(test_diffs.keys(),key = lambda item:item.split('_')[0], reverse =True)
 
-            ref_weight = np.load(ref_dir + '/' + num + '/' + key + '_' + 'weights' + '.npy')
-            if np.average(ref_weight) < 1e-06 and np.average(test_weights[key]) < 1e-06:
-                weight_isequal = True
-            else:
-                weight_isequal= np.allclose(test_weights[key], ref_weight, rtol=1e-01, atol=0, equal_nan = True)
+    for key in ordered_key:
+        ref_weight = np.load(ref_dir + '/' + num + '/' + key + '_' + 'diffs' + '.npy')
+        if np.average(ref_weight) < 1e-06 and np.average(test_diffs[key]) < 1e-06:
+            weight_isequal = True
+        else:
+            weight_isequal= np.allclose(test_diffs[key], ref_weight, rtol=1e-02, atol=0, equal_nan = True)
 
-
-            
-           
-          
-
-
-            if weight_isequal == False:
-                logger.debug(key)
-                #print test_weights[key] - ref_weight
-
-            if first_result:
-                last_res[key] = weight_isequal
-            else:
-                last_res[key] &= weight_isequal
+        if first_result:
+            last_res[key] = weight_isequal
+        else:
+            if weight_isequal == False and flag== 0:
+                logger.debug('error occur from  ' + key)
+                last_res['first_error'] = key
+                #print key
+                #print test_diffs[key] - ref_weight
+                flag = 1
+            last_res[key] &= weight_isequal
 
 
 

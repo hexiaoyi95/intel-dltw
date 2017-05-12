@@ -1,24 +1,24 @@
 {
     "backend" : {
-        "python_path" : "~/workspace/caffe/intel/python",
+        "python_path" : "dl-frameworks/intel-caffe/python",
         "class_path" : "backends.caffe_backend.CaffeBackend",
         "engine" : "default"
     },
     "application" : "applications.layer_accuracy",
     "test_type" : "accuracy",
     "model" : {
-        "topology" : "~/infer-perf-tool/models/bvlc_googlenet/deploy.prototxt" ,
-        "weight" : "~/infer-perf-tool/models/bvlc_googlenet/bvlc_googlenet.caffemodel"
+        "topology" : "dl-models/bvlc_googlenet/deploy.prototxt" ,
+        "weight" : "dl-models/bvlc_googlenet/bvlc_googlenet.caffemodel"
     },
-    "input_path" : "~/infer-perf-tool/data/ilsvrc12/ilsvrc12_val_bmp/test224.txt",
+    "input_path" : "dl-data/ilsvrc12/ilsvrc12_val_bmp/test224.txt",
     "mean_value" : [104,117,123],
     "batch_size" : 4,
     "iteration" : 1,
     "isref": false,
-    "out_dir" : "~/workspace/dltw/out/layer-accuracy-intel",
+    "out_dir" : "out/layer-accuracy-intel",
     "reference" : {
 
-        "result_dir": "~/workspace/dltw/out/layer-accuracy-ref"
+        "result_dir": "out/layer-accuracy-ref"
 
     }
 
