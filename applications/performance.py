@@ -113,7 +113,7 @@ def run(config):
 
             else:
                 ref_time = ref_value[0]
-                diff_time =  value[0] - ref_value[0]
+                diff_time =   ref_value[0] - value[0]
                 value.append('faster than ref')
                 value.append([diff_time, '%f' % (100 * diff_time / ref_time)+"%"])
 
