@@ -13,8 +13,7 @@
     "input_path" : "dl-data/ilsvrc12/ilsvrc12_val_bmp/test224.txt",
     "mean_value" : [104,117,123],
     "batch_size" : 4,
-    "iteration" : 1,
-    "isref": true,
+    "iteration" : 1, 
     "out_dir" : "out/layer-accuracy-ref"
 
 }

@@ -37,7 +37,13 @@ def test_layer_accuracy(backend, config):
         result = {'datas': datas, 'diffs': diffs}
         batch_name = { str(count): batch}
         batches_name.update(batch_name)
-        if config.isref == True:
+        if hasattr(config,'reference'):
+            
+            result_dir = os.path.expanduser(config.reference.result_dir)
+            check_result = check_layer_accuracy_result(batch_name, datas, diffs, result_dir, check_result)
+            #logger.debug(pprint.pprint(check_result))
+        else:
+            
             for data_type, data in result.iteritems():
                 for key, value in data.iteritems():
                     npy_path = config.out_dir + '/' + str(count) + '/' + key + '_' + data_type
@@ -45,10 +51,6 @@ def test_layer_accuracy(backend, config):
                     if not os.path.exists(os.path.dirname(npy_path)):
                         os.makedirs(os.path.dirname(npy_path))
                     np.save(npy_path, value)
-        else:
-            result_dir = os.path.expanduser(config.reference.result_dir)
-            check_result = check_layer_accuracy_result(batch_name, datas, diffs, result_dir, check_result)
-            #logger.debug(pprint.pprint(check_result))
 
 
         if count % 2 == 0 or count == total_batches:

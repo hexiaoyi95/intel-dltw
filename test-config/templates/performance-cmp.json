@@ -1,0 +1,19 @@
+{
+    "backend" : {
+        "python_path" : "dl-frameworks/intel-caffe/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "default"
+    },
+    "application" : "applications.performance",
+    "model" : {
+        "topology": "dl-models/bvlc_googlenet/deploy.prototxt",
+	"weight": "dl-models/bvlc_googlenet/bvlc_googlenet.caffemodel"
+    },
+    "batch_size" : 64,
+    "iteration" : 3,
+    "out_dir" : "out/performance-caffe",
+    "reference" : {
+	"result_dir": "out/performance-caffe"
+    }
+
+}

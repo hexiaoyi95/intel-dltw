@@ -1,0 +1,16 @@
+{
+    "backend" : {
+        "python_path" : "~/chainer-intel/lib/python2.7/site-packages",
+        "class_path" : "backends.chainer_backend.ChainerBackend",
+        "engine" : "default"
+    },
+    "application" : "applications.performance",
+    "model" : {
+        "net" : "ssd",
+	"path": "~/infer-perf-tool/models/ssd",
+	"weight": "~/infer-perf-tool/models/ssd/ssd.model"
+    },
+    "batch_size" : 1,
+    "iteration" : 1,
+    "out_dir" : "~/workspace/dltw/out/chainer-batch1"
+}
