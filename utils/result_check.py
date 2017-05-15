@@ -207,12 +207,9 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
                 raise Exception('image in batch %s can not be found in reference data ' % (num))
     ordered_key = sorted(test_datas.keys(),key = lambda item:item.split('_')[0])
     for key in ordered_key:
-        ref_data = np.load(ref_dir + '/' + num + '/' + key + '_' + 'datas' + '.npy')
+        ref_data = np.load(ref_dir + '/' + num + '/' + key.replace('/', '-') + '_' + 'datas' + '.npy')
 
-        if np.average(ref_data) < 1e-06 and np.average(test_datas[key]) < 1e-06:
-            data_isequal = True
-        else:
-            data_isequal = np.allclose(test_datas[key], ref_data,  rtol=1e-02, atol=1e-04, equal_nan = True)
+        data_isequal = np.allclose(test_datas[key], ref_data,  rtol=1e-02, atol=1e-04, equal_nan = True)
 
         if first_result:
             last_res[key] = data_isequal
@@ -285,7 +282,7 @@ def layer_accuracy_debug(batch_num, img_names, test_result,ref_dir, precision=1e
                     else:
                         ctx = 'diff'
 
-                ref_data = np.load(os.path.join(ref_dir, 'batch_' + str(batch_num),layer_name, blob_name + '_' + ctx + '.npy'))
+                ref_data = np.load(os.path.join(ref_dir, 'batch_' + str(batch_num),layer_name.replace('/', '-'), blob_name + '_' + ctx + '.npy'))
 
                 if np.average(ref_data) < 1e-06 and np.average(np_arry) < 1e-06:
                     isequal = True

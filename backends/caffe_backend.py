@@ -13,8 +13,8 @@ class CaffeBackend():
         # "Use Caffe as self."
         # caffe constructor: network_file, phase, level, stages, weight, engine
         topology_path = os.path.expanduser(str(config.model.topology))
-        if  (hasattr(config, 'engine')) and (config.engine != "default"):
-            engine = str(config.self.engine)
+        if  (hasattr(config.backend, 'engine')) and (config.backend.engine != "default"):
+            engine = str(config.backend.engine)
         else:
             engine = None
 

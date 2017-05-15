@@ -44,13 +44,6 @@ def test_layer_accuracy(backend, config):
         batch_name = { str(count): batch}
         batches_name.update(batch_name)
 
-        if hasattr(config,'reference'):
-            result_dir = os.path.expanduser(config.reference.result_dir)
-            #check_result = layer_accuracy_debug(batch_name, datas, diffs, result_dir, check_result, config.precision)
-            this_batch_result = layer_accuracy_debug(count, batch, result,result_dir, config.precision)
-            check_result.extend(this_batch_result)
-
-
         for layer_name, l in result.iteritems():
             for blob_name, np_list in l:
                 for i, np_arry in enumerate(np_list):
@@ -65,11 +58,17 @@ def test_layer_accuracy(backend, config):
                         else:
                             ctx = 'diff'
 
-                    np_name = os.path.join(config.out_dir,'batch_' + str(count), layer_name, blob_name + '_' + ctx)
+                    np_name = os.path.join(config.out_dir,'batch_' + str(count), layer_name.replace('/','-'), blob_name + '_' + ctx)
                     np_name = os.path.expanduser(np_name)
                     if not os.path.exists(os.path.dirname(np_name)):
                         os.makedirs(os.path.dirname(np_name))
                     np.save(np_name, np_arry)
+
+        if hasattr(config,'reference'):
+            result_dir = os.path.expanduser(config.reference.result_dir)
+            #check_result = layer_accuracy_debug(batch_name, datas, diffs, result_dir, check_result, config.precision)
+            this_batch_result = layer_accuracy_debug(count, batch, result,result_dir, config.precision)
+            check_result.extend(this_batch_result)
 
         if count % 2 == 0 or count == total_batches:
             logging.info("Done for %d/%d batches" % (count,total_batches))
