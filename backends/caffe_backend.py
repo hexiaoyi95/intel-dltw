@@ -239,7 +239,7 @@ class CaffeBackend():
             layer_result = list()
             for blob_name in top_blob_names:
                 top_blob = self.net.blobs[blob_name]
-                layer_result.append([blob_name,[top_blob.data,top_blob.diff]])
+                layer_result.append([blob_name.replace('/','-'),[top_blob.data,top_blob.diff]])
             try:
                 self.net.params[layer_name]
             except:
@@ -247,7 +247,7 @@ class CaffeBackend():
             else:
                 layer_result.append(['params_diff',[item.diff for item in self.net.params[layer_name]]])
 
-            result['%04d' % (count) + '_' + layer_name] = layer_result
+            result[layer_name] = layer_result
 
         return result
 

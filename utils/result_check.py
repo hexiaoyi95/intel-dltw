@@ -260,8 +260,9 @@ def layer_accuracy_debug(batch_num, img_names, test_result,ref_dir, precision=1e
     for img in img_names:
         if not img in ref_batches_name[str(batch_num)]:
             raise Exception('image in batch %s can not be found in reference data ' % (batch_num))
-
+    count = 0
     for layer_name, l in test_result.iteritems():
+        count +=1
         this_layer_pass = 'pass'
         this_layer_result = list()
         for j, [blob_name, np_list] in enumerate(l):
@@ -281,13 +282,13 @@ def layer_accuracy_debug(batch_num, img_names, test_result,ref_dir, precision=1e
                         ctx = 'data'
                     else:
                         ctx = 'diff'
+                try:
+                    ref_data = np.load(os.path.join(ref_dir, 'batch_' + str(batch_num),layer_name.replace('/', '-'), blob_name + '_' + ctx + '.npy'))
+                except IOError:
+                    logger.error("layer {} not found in refenence, skiping ...".format(layer_name))
+                    continue;
 
-                ref_data = np.load(os.path.join(ref_dir, 'batch_' + str(batch_num),layer_name.replace('/', '-'), blob_name + '_' + ctx + '.npy'))
-
-                if np.average(ref_data) < 1e-06 and np.average(np_arry) < 1e-06:
-                    isequal = True
-                else:
-                    isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
+                isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
 
                 if isequal:
                     this_arry = 'pass'
@@ -310,7 +311,7 @@ def layer_accuracy_debug(batch_num, img_names, test_result,ref_dir, precision=1e
             ref_sample_list.insert(0, '    ')
             this_layer_result.append(sample_list)
             this_layer_result.append(ref_sample_list)
-        this_batch_result.append([layer_name.split('_',1)[0], layer_name.split('_',1)[1], this_layer_pass])
+        this_batch_result.append(['%04d' % count, layer_name, this_layer_pass])
         this_batch_result.extend(this_layer_result)
         this_batch_result.append(['-']*40)
 

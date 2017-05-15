@@ -2,7 +2,7 @@
     "backend" : {
         "python_path" : "dl-frameworks/intel-caffe/python",
         "class_path" : "backends.caffe_backend.CaffeBackend",
-        "engine" : "MKLDNN"
+        "engine" : "MKL2017"
     },
     "application" : "applications.layer_accuracy_for_debug",
     "test_type" : "accuracy",

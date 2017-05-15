@@ -6,6 +6,7 @@ from utils.io import json2obj
 from backends import backends_factory
 import pprint
 import numpy as np
+import shutil
 from collections import OrderedDict
 logger = logging.getLogger('root')
 
@@ -43,7 +44,7 @@ def test_layer_accuracy(backend, config):
         result = cal4result(backend, batch, config)
         batch_name = { str(count): batch}
         batches_name.update(batch_name)
-
+        shutil.rmtree(config.out_dir)
         for layer_name, l in result.iteritems():
             for blob_name, np_list in l:
                 for i, np_arry in enumerate(np_list):
