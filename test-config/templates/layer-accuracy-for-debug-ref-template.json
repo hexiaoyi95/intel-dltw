@@ -4,7 +4,7 @@
         "class_path" : "backends.caffe_backend.CaffeBackend",
         "engine" : "default"
     },
-    "application" : "applications.layer_accuracy",
+    "application" : "applications.layer_accuracy_for_debug",
     "test_type" : "accuracy",
     "model" : {
         "topology" : "dl-models/bvlc_googlenet/deploy.prototxt" ,

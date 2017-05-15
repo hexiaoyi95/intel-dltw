@@ -15,8 +15,9 @@ import bbox
 import ssd
 class ChainerBackend():
     def __init__(self, config):
-        print "Use Chainer as backend."
-        print chainer.__file__
+
+        #print "Use Chainer as backend."
+        #print chainer.__file__
         if config.model.net == "googlenet":
             sys.path.insert(1,os.path.expanduser(config.model.path))
             googlenet = __import__("googlenet")
@@ -152,12 +153,12 @@ class ChainerBackend():
 
             for i, y in enumerate(outputs):
                 seen_vars.add(id(y))
-                datas[str(func_num) + "_" + func_name + "_" +str(i + 1)  + "_data"] = y.data
-                datas[str(func_num) + "_" + func_name + "_" +str(i + 1)  + "_diff"] = y.grad
+                datas['%04d' % (func_num) + "_" + func_name + "_" +str(i + 1)  + "_data"] = y.data
+                datas['%04d' % (func_num) + "_" + func_name + "_" +str(i + 1)  + "_diff"] = y.grad
 
             for i,x in enumerate(func.inputs):
 
-                inputs[str(func_num) + "_" + func_name + "_" + str(i +1) ] = x
+                inputs['%04d' % (func_num) + "_" + func_name + "_" + str(i +1) ] = x
 
                 if x.creator is not None:
                     add_cand(x.creator)

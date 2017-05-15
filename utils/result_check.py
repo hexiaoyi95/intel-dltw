@@ -4,6 +4,9 @@ import logging
 logger = logging.getLogger('root')
 PRECISION = 1e-4
 import pprint
+import os
+
+
 def iscloseFP(a, b, precision=PRECISION):
     return abs(a-b) < precision
 
@@ -203,14 +206,13 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
             if not img in ref_batches_name[num]:
                 raise Exception('image in batch %s can not be found in reference data ' % (num))
     ordered_key = sorted(test_datas.keys(),key = lambda item:item.split('_')[0])
-
     for key in ordered_key:
         ref_data = np.load(ref_dir + '/' + num + '/' + key + '_' + 'datas' + '.npy')
 
         if np.average(ref_data) < 1e-06 and np.average(test_datas[key]) < 1e-06:
             data_isequal = True
         else:
-            data_isequal = np.allclose(test_datas[key], ref_data,  rtol=1e-02, atol=0, equal_nan = True)
+            data_isequal = np.allclose(test_datas[key], ref_data,  rtol=1e-02, atol=1e-04, equal_nan = True)
 
         if first_result:
             last_res[key] = data_isequal
@@ -230,7 +232,7 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
         if np.average(ref_weight) < 1e-06 and np.average(test_diffs[key]) < 1e-06:
             weight_isequal = True
         else:
-            weight_isequal= np.allclose(test_diffs[key], ref_weight, rtol=1e-02, atol=0, equal_nan = True)
+            weight_isequal= np.allclose(test_diffs[key], ref_weight, rtol=1e-02, atol=1e-04, equal_nan = True)
 
         if first_result:
             last_res[key] = weight_isequal
@@ -247,5 +249,74 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
 
     return last_res
 
+def layer_accuracy_debug(batch_num, img_names, test_result,ref_dir, precision=1e-04 ):
+
+    this_batch_result = list()
+    this_batch_result.append(['batch_num: ',batch_num])
+    this_batch_result.append(['-']*40)
+    ref_json = ref_dir + '/' + 'name.json'
+    ref_batches_name = json2dict(ref_json)
+
+    if not str(batch_num) in ref_batches_name :
+        raise Exception('batch can not be found in reference data')
+
+    for img in img_names:
+        if not img in ref_batches_name[str(batch_num)]:
+            raise Exception('image in batch %s can not be found in reference data ' % (batch_num))
+
+    for layer_name, l in test_result.iteritems():
+        this_layer_pass = 'pass'
+        this_layer_result = list()
+        for j, [blob_name, np_list] in enumerate(l):
+            ref_sample_list = list()
+            sample_list = list()
+            blob_title = list()
+            for i, np_arry in enumerate(np_list):
+
+                if blob_name == 'params_diff':
+                    if i == 0:
+                        ctx = 'W'
+                    else:
+                        ctx = 'b'
+
+                else:
+                    if i == 0:
+                        ctx = 'data'
+                    else:
+                        ctx = 'diff'
+
+                ref_data = np.load(os.path.join(ref_dir, 'batch_' + str(batch_num),layer_name, blob_name + '_' + ctx + '.npy'))
+
+                if np.average(ref_data) < 1e-06 and np.average(np_arry) < 1e-06:
+                    isequal = True
+                else:
+                    isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
+
+                if isequal:
+                    this_arry = 'pass'
+                else:
+                    this_arry = 'fail'
+                    this_layer_pass = 'fail'
+
+                blob_title.append(ctx + ': ' + this_arry)
+
+                ref_sample_list.append(ctx + '_ref' + ': ')
+                ref_sample_list.append(np.concatenate((ref_data.flatten()[1:6],ref_data.flatten()[-5:])))
+                sample_list.append(ctx + ': ')
+                sample_list.append(np.concatenate((np_arry.flatten()[1:6],np_arry.flatten()[-5:])))
+            if blob_name == 'params_diff':
+                blob_title.insert(0, '  paramaters_diff: ')
+            else:
+                blob_title.insert(0, '  top_name: ' + blob_name)
+            this_layer_result.append(blob_title)
+            sample_list.insert(0, '    ')
+            ref_sample_list.insert(0, '    ')
+            this_layer_result.append(sample_list)
+            this_layer_result.append(ref_sample_list)
+        this_batch_result.append([layer_name.split('_',1)[0], layer_name.split('_',1)[1], this_layer_pass])
+        this_batch_result.extend(this_layer_result)
+        this_batch_result.append(['-']*40)
+
+    return this_batch_result
 
 

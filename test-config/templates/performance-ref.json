@@ -1,16 +1,16 @@
 {
     "backend" : {
-        "python_path" : "~/chainer-intel/lib/python2.7/site-packages",
-        "class_path" : "backends.chainer_backend.ChainerBackend",
-        "engine" : "default"
+        "python_path" : "dl-frameworks/intel-caffe/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "MKL2017"
     },
     "application" : "applications.performance",
     "model" : {
-        "net" : "ssd",
-	"path": "~/infer-perf-tool/models/ssd",
-	"weight": "~/infer-perf-tool/models/ssd/ssd.model"
+        "topology": "dl-models/bvlc_googlenet/deploy.prototxt",
+	"weight": "dl-models/bvlc_googlenet/bvlc_googlenet.caffemodel"
     },
-    "batch_size" : 1,
-    "iteration" : 1,
-    "out_dir" : "~/workspace/dltw/out/chainer-batch1"
+    "batch_size" : 4,
+    "iteration" : 50,
+    "out_dir" : "out/performance-caffe"
+
 }

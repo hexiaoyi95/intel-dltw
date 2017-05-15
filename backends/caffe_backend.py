@@ -6,6 +6,7 @@ from utils.benchmark import Timer
 # os.environ['GLOG_minloglevel'] = '2'
 import caffe
 import inspect
+from collections import OrderedDict
 logger = logging.getLogger('root')
 class CaffeBackend():
     def __init__(self, config):
@@ -188,7 +189,7 @@ class CaffeBackend():
         go_through(layer_id)
         timer.stop()
 
-        return [self.get_layer_name(layer_id), timer.milliseconds()]
+        return ['%04d' % (layer_id + 1) + '_' + self.get_layer_name(layer_id), timer.milliseconds()]
 
     def get_layers_perf(self, direction):
         """
@@ -209,10 +210,10 @@ class CaffeBackend():
         return [layers_perf, total_time]
 
     def get_layer_accuracy_output(self):
-
-        datas = {}
-        diffs = {}
+        datas = OrderedDict()
+        diffs = OrderedDict()
         count = 0
+
         for key,value in self.net.blobs.iteritems():
             count +=1
             datas['%04d' % (count) +"_" + key + "_data"] = value.data
@@ -227,6 +228,30 @@ class CaffeBackend():
                 diffs[param_key] = param.diff
 
         return datas,diffs
+
+    def get_layer_accuracy_output_debug(self):
+
+        result = OrderedDict()
+        count = 0
+
+        for layer_name,top_blob_names in self.net.top_names.iteritems():
+            count +=1
+            layer_result = list()
+            for blob_name in top_blob_names:
+                top_blob = self.net.blobs[blob_name]
+                layer_result.append([blob_name,[top_blob.data,top_blob.diff]])
+            try:
+                self.net.params[layer_name]
+            except:
+                pass
+            else:
+                layer_result.append(['params_diff',[item.diff for item in self.net.params[layer_name]]])
+
+            result['%04d' % (count) + '_' + layer_name] = layer_result
+
+        return result
+
+
 
     def layers(self):
         return self.net.layers

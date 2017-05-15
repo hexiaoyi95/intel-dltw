@@ -9,8 +9,8 @@
         "topology": "dl-models/bvlc_googlenet/deploy.prototxt",
 	"weight": "dl-models/bvlc_googlenet/bvlc_googlenet.caffemodel"
     },
-    "batch_size" : 64,
-    "iteration" : 3,
+    "batch_size" : 4,
+    "iteration" : 100,
     "out_dir" : "out/performance-caffe",
     "reference" : {
 	"result_dir": "out/performance-caffe"
