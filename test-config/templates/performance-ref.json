@@ -6,11 +6,10 @@
     },
     "application" : "applications.performance",
     "model" : {
-        "topology": "dl-models/bvlc_googlenet/deploy.prototxt",
-	"weight": "dl-models/bvlc_googlenet/bvlc_googlenet.caffemodel"
+        "topology": "dl-models/bvlc_googlenet/train_val.prototxt"
     },
     "batch_size" : 4,
-    "iteration" : 50,
+    "iteration" : 3,
     "out_dir" : "out/performance-caffe"
 
 }

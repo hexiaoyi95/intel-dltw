@@ -7,6 +7,7 @@ from utils.benchmark import Timer
 import caffe
 import inspect
 from collections import OrderedDict
+import pprint
 logger = logging.getLogger('root')
 class CaffeBackend():
     def __init__(self, config):
@@ -99,11 +100,17 @@ class CaffeBackend():
 
 
     def reshape_by_batch_size(self, batch_size):
-        self.net.blobs['data'].reshape(batch_size,
-                                           self.net.blobs['data'].data.shape[1],
-                                           self.net.blobs['data'].data.shape[2],
-                                           self.net.blobs['data'].data.shape[3]
-                                           )
+        logger.debug('reshaping to batch size: {}'.format(batch_size))
+        #first reshape the top blobs of data layer
+        for top_blob_name in self.net.top_names['data']:
+            print self.net.blobs[top_blob_name].data.shape
+            orig_shape = self.net.blobs[top_blob_name].data.shape
+            target_shape = list(orig_shape[:])
+            target_shape[0] = batch_size
+
+            logger.debug('reshaping top blob [{}] of data layer from {} to {}'.format(top_blob_name, orig_shape, target_shape))
+            self.net.blobs[top_blob_name].reshape(*target_shape)
+        #then reshape the whole network
         self.net.reshape()
 
     def set_net_input(self, inputs):
@@ -274,14 +281,15 @@ class CaffeBackend():
 
     def infer(self):
         self.net.forward()
-
     def backward(self):
-        top_diff = {}
-        for i in xrange(len(self.net.outputs)):
-            #print self.net.outputs[i]
-            diff = np.zeros_like(self.net.blobs[self.net.outputs[i]].diff)
-            diff += 1000
-            top_diff[self.net.outputs[i]] = diff[...]
-        self.net.backward(**top_diff)
-
+        self.net.backward()
+#    def backward(self):
+#        top_diff = {}
+#        for i in xrange(len(self.net.outputs)):
+#            #print self.net.outputs[i]
+#            diff = np.zeros_like(self.net.blobs[self.net.outputs[i]].diff)
+#            diff += 1000
+#            top_diff[self.net.outputs[i]] = diff[...]
+#        self.net.backward(**top_diff)
+#
         #print self.net.blobs['conv1_1'].diff
