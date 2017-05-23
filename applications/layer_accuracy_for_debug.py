@@ -44,7 +44,8 @@ def test_layer_accuracy(backend, config):
         result = cal4result(backend, batch, config)
         batch_name = { str(count): batch}
         batches_name.update(batch_name)
-        shutil.rmtree(config.out_dir)
+        if os.path.exists(config.out_dir):
+            shutil.rmtree(config.out_dir)
         for layer_name, l in result.iteritems():
             for blob_name, np_list in l:
                 for i, np_arry in enumerate(np_list):
@@ -64,6 +65,8 @@ def test_layer_accuracy(backend, config):
                     if not os.path.exists(os.path.dirname(np_name)):
                         os.makedirs(os.path.dirname(np_name))
                     np.save(np_name, np_arry)
+                    with open(np_name + ".txt", 'w') as f:
+                        f.write(str(np_arry))
 
         if hasattr(config,'reference'):
             result_dir = os.path.expanduser(config.reference.result_dir)
@@ -101,9 +104,4 @@ def run(config):
     backend_class = backends_factory(config.backend)
     backend = backend_class(config)
 
-    if config.test_type == "performance":
-        test_layer_performance(backend, config)
-    elif config.test_type == "accuracy":
-        test_layer_accuracy(backend, config)
-    else:
-        raise ValueError('Unsupported test type {}'.format(config.test_type))
+    test_layer_accuracy(backend, config)

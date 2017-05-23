@@ -1,0 +1,19 @@
+{
+    "backend" : {
+        "python_path" : "dl-frameworks/intel-caffe/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "MKL2017"
+    },
+    "application" : "applications.convergence",
+    "model" : {
+        "topology" : "dl-models/bvlc_googlenet/img_train_val.prototxt" ,
+        "weight" : "dl-models/bvlc_googlenet/bvlc_googlenet.caffemodel",
+        "type" : "train"
+    },
+    "iteration" : 1,
+    "out_dir" : "out/layer-accuracy-intel",
+    "reference" : {
+        "result_dir": "out/layer-accuracy-ref"
+    },
+    "precision" : 0.01
+}

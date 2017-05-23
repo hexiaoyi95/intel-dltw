@@ -17,23 +17,23 @@ class CaffeBackend():
         if  (hasattr(config.backend, 'engine')) and (config.backend.engine != "default"):
             engine = str(config.backend.engine)
         else:
-            engine = None
+            engine = 'CAFFE'
 
         if hasattr(config.model, 'weight'):
             weight_path = os.path.expanduser(str(config.model.weight))
         else:
             weight_path = None
 
-        if config.application == "applications.performance":
-            logger.debug("self for performance")
-            phase = caffe.TRAIN
-        else:
+        if config.model.type == "test":
             phase = caffe.TEST
+        else:
+            phase = caffe.TRAIN
 
         caffe.set_mode_cpu()
+        caffe.set_random_seed(0)
         try:
             logger.debug("using engine: {}".format(engine))
-            self.net = caffe.Net(topology_path, phase, weights=weight_path, engine=engine)
+            self.net = caffe.Net(topology_path, caffe.TRAIN, weights=weight_path, engine=engine)
         except:
             self.net = caffe.Net(topology_path, phase, weights=weight_path)
 
@@ -100,16 +100,20 @@ class CaffeBackend():
 
 
     def reshape_by_batch_size(self, batch_size):
+        if self.get_layer_type(0) == 'Data':
+            logger.info('caffe does not support reshape for layer type: Data')
+            return
+
         logger.debug('reshaping to batch size: {}'.format(batch_size))
         #first reshape the top blobs of data layer
         for top_blob_name in self.net.top_names['data']:
-            print self.net.blobs[top_blob_name].data.shape
             orig_shape = self.net.blobs[top_blob_name].data.shape
             target_shape = list(orig_shape[:])
             target_shape[0] = batch_size
 
             logger.debug('reshaping top blob [{}] of data layer from {} to {}'.format(top_blob_name, orig_shape, target_shape))
             self.net.blobs[top_blob_name].reshape(*target_shape)
+
         #then reshape the whole network
         self.net.reshape()
 
@@ -182,7 +186,7 @@ class CaffeBackend():
         return output
 
     def get_layer_perf(self,layer_id, direction):
-
+        # logger.debug('process layer: {} {}'.format(layer_id, direction))
         if direction == "forward":
             go_through = self.forward_layer
         elif direction == "backward":
@@ -196,7 +200,7 @@ class CaffeBackend():
         go_through(layer_id)
         timer.stop()
 
-        return ['%04d' % (layer_id + 1) + '_' + self.get_layer_name(layer_id), timer.milliseconds()]
+        return timer.milliseconds()
 
     def get_layers_perf(self, direction):
         """
@@ -210,9 +214,9 @@ class CaffeBackend():
             layer_ids = range(len(self.layers())-1, -1, -1)
 
         for layer_id in layer_ids:
-            layer_perf = self.get_layer_perf(layer_id, direction)
-            total_time += layer_perf[1]
-            layers_perf.append(layer_perf)
+            layer_time = self.get_layer_perf(layer_id, direction)
+            total_time += layer_time
+            layers_perf.append([layer_id, layer_time])
 
         return [layers_perf, total_time]
 

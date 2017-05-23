@@ -9,67 +9,83 @@ import pprint
 from utils.io import json2dict
 logger = logging.getLogger()
 
-def get_layers_perf(direction, backend, config):
-    """
-    return
-        per layer forward or backward time: [(layer name, layer type, elapsed_time, FPS), ... ]
-    """
+def _get_layers_perf(backend, direction, elapsed_ms_net_list, elapsed_ms_layers_list):
+    [layers_time, net_time]=backend.get_layers_perf(direction)
+    elapsed_ms_net_list.append(net_time)
+    for layer_perf in layers_time:
+        layer_id = layer_perf[0]
+        layer_time = layer_perf[1]
+        elapsed_ms_layers_list[layer_id].append(layer_time)
+
+def layers_perf_post_process(config, backend, elapsed_ms_layers_list, elapsed_ms_net_list):
     layers_perf = []
-    elapsed_ms_list = []
-    for i in xrange(int(config.iteration)):
-        backend.prepare_benchmark(config)
-        [layers_time,net_time]=backend.get_layers_perf(direction)
-
-        elapsed_s_layers_list = [[] for l in xrange(len(layers_time))]
-        elapsed_ms_list.append(net_time)
-
-        for j in xrange(len(layers_time)):
-            elapsed_s_layers_list[j].append(layers_time[j][1])
-
-    for k in xrange(len(elapsed_s_layers_list)):
-        func_name = layers_time[k][0]
-        avg_time = utils.benchmark.performance_analysis(elapsed_s_layers_list[k])[0]
-        layer_perf = [func_name, avg_time]
+    #first get perf of every layer
+    for k in xrange(len(elapsed_ms_layers_list)):
+        layer_name = backend.get_layer_name(k)
+        avg_time = utils.benchmark.performance_analysis(elapsed_ms_layers_list[k])[0]
+        layer_perf = [layer_name, avg_time]
         layers_perf.append(layer_perf)
 
-    net_avg_time = utils.benchmark.performance_analysis(elapsed_ms_list)[0]
-    net_FPS = config.batch_size / ( net_avg_time / 1000 )
-    net_perf = [net_avg_time,net_FPS]
-
-    layers_perf.append(['summary', [net_avg_time, net_FPS]])
+    #then get the sum perf of every layer
+    net_perf = get_avg_FPS(elapsed_ms_net_list, config.batch_size)
+    layers_perf.append(['summary', net_perf])
 
     return layers_perf
 
-def get_net_perf(direction, backend, config):
+def get_layers_perf(backend, config):
     """
     return
-        net forward or backward time: float
+        per layer forward and backward time: [(layer name, layer type, elapsed_time, FPS), ... ]
     """
-    if direction == "forward":
-        go_through = backend.forward
-    elif direction == "backward":
-        go_through = backend.backward
-    else:
-        raise Exception('Expect forward or backward but get {}'.format(direction))
-    elapsed_ms_list = []
-    timer = Timer()
-    for i in xrange(1):
-        backend.prepare_benchmark(config)
-        backend.forward()
-        backend.backward()
+    fwd_elapsed_ms_net_list = []
+    fwd_elapsed_ms_layers_list = [[] for l in xrange(len(backend.layers()))]
+    bwd_elapsed_ms_net_list = []
+    bwd_elapsed_ms_layers_list = [[] for l in xrange(len(backend.layers()))]
+
 
     for i in xrange(int(config.iteration)):
-        backend.prepare_benchmark(config)
-        timer.start()
-        go_through()
-        timer.stop()
-        elapsed_ms_list.append(timer.milliseconds())
+        _get_layers_perf(backend, 'forward', fwd_elapsed_ms_net_list, fwd_elapsed_ms_layers_list)
+        _get_layers_perf(backend, 'backward', bwd_elapsed_ms_net_list, bwd_elapsed_ms_layers_list)
 
+    layers_forward_perf = layers_perf_post_process(config, backend, fwd_elapsed_ms_layers_list, fwd_elapsed_ms_net_list)
+    layers_backward_perf =layers_perf_post_process(config, backend, bwd_elapsed_ms_layers_list, bwd_elapsed_ms_net_list)
+
+    return layers_forward_perf, layers_backward_perf
+
+def _get_net_perf(go_through):
+    timer = Timer()
+    timer.start()
+    go_through()
+    timer.stop()
+    return timer.milliseconds()
+
+def get_avg_FPS(elapsed_ms_list, batch_size):
     avg_time = utils.benchmark.performance_analysis(elapsed_ms_list)[0]
-    FPS = config.batch_size / (avg_time / 1000.0)
+    FPS = batch_size / (avg_time / 1000.0)
     return [avg_time, FPS]
 
-def convertToReport(res_dict, config):
+def get_net_perf(backend, config):
+
+    backend.prepare_benchmark(config)
+    """
+    return
+        net forward and backward time: float
+    """
+    fwd_elapsed_ms_list = []
+    bwd_elapsed_ms_list = []
+    for i in xrange(int(config.iteration)):
+        logger.debug('processing {}th iteration forward'.format(i))
+        net_time = _get_net_perf(backend.forward)
+        fwd_elapsed_ms_list.append(net_time)
+        logger.debug('processing {}th iteration backward'.format(i))
+        net_time = _get_net_perf(backend.backward)
+        bwd_elapsed_ms_list.append(net_time)
+
+    net_forward_perf = get_avg_FPS(fwd_elapsed_ms_list, config.batch_size)
+    net_backward_perf = get_avg_FPS(bwd_elapsed_ms_list, config.batch_size)
+    return net_forward_perf, net_backward_perf
+
+def convertToReport(res_dict, config, backend):
     ref_res_dict = json2dict(os.path.join(config.reference.result_dir, 'perf_data.json'))
     aTXT = list()
     net_time = list()
@@ -92,12 +108,15 @@ def convertToReport(res_dict, config):
     ref_b_perf = dict(ref_res_dict['layers_backward_perf'])
 
     orderedKey = sorted(layers_f_perf.iterkeys(), key = lambda item:item.split('_',1)[0])
+    layer_id = -1
     for key in orderedKey:
         if key != 'summary':
             #print key
+            layer_id += 1
             layer_time = list()
-            layer_time.append('layer_id: ' + key.split('_',1)[0])
-            layer_time.append('layer_name: ' + key.split('_',1)[1])
+            layer_time.append('layer_id: {}'.format(layer_id) )
+            layer_time.append('layer_name: {}'.format(key))
+            layer_time.append('layer_type: {}'.format(backend.get_layer_type(layer_id)))
             aTXT.append(layer_time)
             layer_time = list()
             layer_time.append('forward time(ms): ')
@@ -113,7 +132,7 @@ def convertToReport(res_dict, config):
             aTXT.append(layer_time)
             aTXT.append(['-']*40)
 
-    with open(os.path.join(config.out_dir, 'performance_report'),'w') as fp:
+    with open(os.path.join(config.out_dir, 'performance_cmp_report.txt'),'w') as fp:
         for line in aTXT:
             if type(line) == type([]):
                 for word in line:
@@ -135,10 +154,10 @@ def run(config):
     """
     backend_class = backends_factory(config.backend)
     backend = backend_class(config)
-    layers_forward_perf = get_layers_perf('forward', backend, config)
-    layers_backward_perf = get_layers_perf('backward', backend, config)
-    net_forward_perf = get_net_perf('forward', backend, config)
-    net_backward_perf = get_net_perf('backward', backend, config)
+    backend.prepare_benchmark(config)
+
+    layers_forward_perf, layers_backward_perf = get_layers_perf(backend, config)
+    net_forward_perf, net_backward_perf = get_net_perf(backend, config)
 
 
     res_dict = {
@@ -147,11 +166,12 @@ def run(config):
             'net_forward_perf'    : net_forward_perf,
             'net_backward_perf'   : net_backward_perf
     }
-
     if hasattr(config, 'getReport'):
-        convertToReport(res_dict,config)
+        logger.debug('gen report')
+        convertToReport(res_dict, config, backend)
 
     if hasattr(config, 'reference'):
+        logger.debug('comparing')
         ref_res_dict = json2dict(os.path.join(config.reference.result_dir,'perf_data.json'))
 
         for key,value in res_dict.iteritems():

@@ -7,13 +7,13 @@
     "application" : "applications.layer_accuracy_for_debug",
     "test_type" : "accuracy",
     "model" : {
-        "topology" : "dl-models/bvlc_googlenet/deploy.prototxt" ,
+        "topology" : "dl-models/bvlc_googlenet/train_val.prototxt" ,
         "weight" : "dl-models/bvlc_googlenet/bvlc_googlenet.caffemodel"
     },
     "input_path" : "dl-data/ilsvrc12/ilsvrc12_val_bmp/test224.txt",
     "mean_value" : [104,117,123],
-    "batch_size" : 8,
-    "iteration" : 4, 
+    "batch_size" : 1,
+    "iteration" : 1,
     "out_dir" : "out/layer-accuracy-ref"
 
 }

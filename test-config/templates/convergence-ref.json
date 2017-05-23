@@ -1,0 +1,16 @@
+{
+    "backend" : {
+        "python_path" : "dl-frameworks/bvlc-caffe/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "default"
+    },
+    "application" : "applications.convergence",
+    "model" : {
+        "topology" : "dl-models/bvlc_googlenet/img_train_val.prototxt" ,
+        "weight" : "dl-models/bvlc_googlenet/bvlc_googlenet.caffemodel",
+        "type" : "train"
+    },
+    "iteration" : 1,
+    "out_dir" : "out/layer-accuracy-ref"
+
+}

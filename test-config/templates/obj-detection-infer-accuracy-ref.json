@@ -10,11 +10,7 @@
         "topology" : "dl-models/caffe/ssd/deploy.prototxt" ,
         "weight" : "dl-models/caffe/ssd/VGG_VOC0712_SSD_300x300_iter_120000.caffemodel"
     },
-<<<<<<< HEAD
-    "input_path" : "~/infer-perf-tool/data/VOC0712_test/test.txt",
-=======
     "input_path" : "dl-data/VOC0712_test/test.txt",
->>>>>>> 391e0d0e9cfaf11a42e0c0541701999f21cd96ef
     "mean_value" : [104,117,123],
     "batch_size" : 4,
     "iteration" : 1,

@@ -246,6 +246,69 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
 
     return last_res
 
+def layer_accuracy_convergence(backend, test_result, ref_dir, precision=1e-04 ):
+
+    this_batch_result = list()
+    this_batch_result.append(['-']*40)
+
+    count = -1
+    for layer_name, l in test_result.iteritems():
+        count +=1
+        this_layer_pass = 'pass'
+        this_layer_result = list()
+        for j, [blob_name, np_list] in enumerate(l):
+            ref_sample_list = list()
+            sample_list = list()
+            blob_title = list()
+            for i, np_arry in enumerate(np_list):
+
+                if blob_name == 'params_diff':
+                    if i == 0:
+                        ctx = 'W'
+                    else:
+                        ctx = 'b'
+
+                else:
+                    if i == 0:
+                        ctx = 'data'
+                    else:
+                        ctx = 'diff'
+                try:
+                    ref_data = np.load(os.path.join(ref_dir,layer_name.replace('/', '-'), blob_name + '_' + ctx + '.npy'))
+                except IOError:
+                    logger.error("layer {} not found in refenence, skiping ...".format(layer_name))
+                    continue;
+
+                isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
+
+                if isequal:
+                    this_arry = 'pass'
+                else:
+                    this_arry = 'fail'
+                    this_layer_pass = 'fail'
+
+                blob_title.append(ctx + ': ' + this_arry)
+
+                ref_sample_list.append(ctx + '_ref' + ': ')
+                ref_sample_list.append(np.concatenate((ref_data.flatten()[1:6],ref_data.flatten()[-5:])))
+                sample_list.append(ctx + ': ')
+                sample_list.append(np.concatenate((np_arry.flatten()[1:6],np_arry.flatten()[-5:])))
+            if blob_name == 'params_diff':
+                blob_title.insert(0, '  paramaters_diff: ')
+            else:
+                blob_title.insert(0, '  top_name: ' + blob_name)
+            this_layer_result.append(blob_title)
+            sample_list.insert(0, '    ')
+            ref_sample_list.insert(0, '    ')
+            this_layer_result.append(sample_list)
+            this_layer_result.append(ref_sample_list)
+        this_batch_result.append(['%04d' % count, backend.get_layer_type(count), layer_name, this_layer_pass])
+        this_batch_result.extend(this_layer_result)
+        this_batch_result.append(['-']*40)
+
+    return this_batch_result
+
+
 def layer_accuracy_debug(batch_num, img_names, test_result,ref_dir, precision=1e-04 ):
 
     this_batch_result = list()
