@@ -23,7 +23,7 @@ def layers_perf_post_process(config, backend, elapsed_ms_layers_list, elapsed_ms
     for k in xrange(len(elapsed_ms_layers_list)):
         layer_name = backend.get_layer_name(k)
         avg_time = utils.benchmark.performance_analysis(elapsed_ms_layers_list[k])[0]
-        layer_perf = [layer_name, avg_time]
+        layer_perf = [k, avg_time]
         layers_perf.append(layer_perf)
 
     #then get the sum perf of every layer
@@ -66,7 +66,7 @@ def get_avg_FPS(elapsed_ms_list, batch_size):
 
 def get_net_perf(backend, config):
 
-    backend.prepare_benchmark(config)
+    #backend.prepare_benchmark(config)
     """
     return
         net forward and backward time: float
@@ -107,30 +107,41 @@ def convertToReport(res_dict, config, backend):
     ref_f_perf = dict(ref_res_dict['layers_forward_perf'])
     ref_b_perf = dict(ref_res_dict['layers_backward_perf'])
 
-    orderedKey = sorted(layers_f_perf.iterkeys(), key = lambda item:item.split('_',1)[0])
-    _orderedKey = sorted(layers_f_perf.iterKeys(), Key = lamda item:int(layers_f_perf[item][:-1]))
-    print _orderedKey
+    fwd_perf_perctg = dict()
+    bwd_perf_perctg = dict()
+    for key in layers_f_perf.iterkeys():
+	if key != 'summary':
+ 	    fwd_perf_perctg[key] = -100*(layers_f_perf[key] - ref_f_perf[key])/ref_f_perf[key]
+	    bwd_perf_perctg[key] = -100*(layers_b_perf[key] - ref_b_perf[key])/ref_b_perf[key]
+    if config.getReport.ReportOrder == 'default':
+    	orderedKey = sorted(layers_f_perf.iterkeys(), key = lambda item:item)
+    elif config.getReport.ReportOrder == 'forward performance':
+	orderedKey = sorted(fwd_perf_perctg.iterkeys(), key = lambda item:fwd_perf_perctg[item])
+    elif config.getReport.ReportOrder == 'backward performance':
+	orderedKey = sorted(bwd_perf_perctg.iterkeys(), key = lambda item:bwd_perf_perctg[item])
+    else:
+	raise Exception('Unsupported reprort order,choose default,forward performance or backward performance')
     layer_id = -1
     for key in orderedKey:
         if key != 'summary':
             #print key
             layer_id += 1
             layer_time = list()
-            layer_time.append('layer_id: {}'.format(layer_id) )
-            layer_time.append('layer_name: {}'.format(key))
-            layer_time.append('layer_type: {}'.format(backend.get_layer_type(layer_id)))
+            layer_time.append('layer_id: {}'.format(key) )
+            layer_time.append('layer_name: {}'.format(backend.get_layer_name(key)))
+            layer_time.append('layer_type: {}'.format(backend.get_layer_type(key)))
             aTXT.append(layer_time)
             layer_time = list()
             layer_time.append('forward time(ms): ')
             layer_time.append('%.4f' % (layers_f_perf[key]))
             layer_time.append('%.4f' % (ref_f_perf[key]))
-            layer_time.append( '%.2f' % (-100*(layers_f_perf[key] - ref_f_perf[key])/ref_f_perf[key]) + '%')
+            layer_time.append( '%.2f' % (fwd_perf_perctg[key] ) + '%')
             aTXT.append(layer_time)
             layer_time = list()
             layer_time.append('backward time(ms): ')
             layer_time.append('%.4f' % (layers_b_perf[key]))
             layer_time.append('%.4f' % (ref_b_perf[key]))
-            layer_time.append( '%.2f' % (-100*(layers_b_perf[key] - ref_b_perf[key])/ref_b_perf[key]) + '%')
+            layer_time.append( '%.2f' % ( bwd_perf_perctg[key] )+ '%')
             aTXT.append(layer_time)
             aTXT.append(['-']*40)
 
@@ -156,7 +167,7 @@ def run(config):
     """
     backend_class = backends_factory(config.backend)
     backend = backend_class(config)
-    backend.prepare_benchmark(config)
+    #backend.prepare_benchmark(config)
 
     layers_forward_perf, layers_backward_perf = get_layers_perf(backend, config)
     net_forward_perf, net_backward_perf = get_net_perf(backend, config)

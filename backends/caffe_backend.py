@@ -240,26 +240,30 @@ class CaffeBackend():
 
         return datas,diffs
 
-    def get_layer_accuracy_output_debug(self):
-
+    def get_layer_accuracy_output_debug(self,data_type='top_blob'):
         result = OrderedDict()
         count = 0
 
         for layer_name,top_blob_names in self.net.top_names.iteritems():
             count +=1
             layer_result = list()
-            for blob_name in top_blob_names:
-                top_blob = self.net.blobs[blob_name]
-                layer_result.append([blob_name.replace('/','-'),[top_blob.data,top_blob.diff]])
-            try:
-                self.net.params[layer_name]
+	    for blob_name in top_blob_names:
+	        top_blob = self.net.blobs[blob_name]
+ 		
+		data = top_blob.data.copy()
+	        diff = top_blob.diff.copy()
+		layer_result.append([blob_name.replace('/','-'),[data,diff]])
+	    
+	    try:
+                paramater = self.net.params[layer_name]
             except:
                 pass
             else:
-                layer_result.append(['params_diff',[item.diff for item in self.net.params[layer_name]]])
+                layer_result.append(['params_diff',[item.diff.copy() for item in paramater]])
 
-            result[layer_name] = layer_result
-
+                #result[layer_name].append(['params_diff',[item.diff.copy for item in paramater]])
+            
+	    result[layer_name] = layer_result
         return result
 
 

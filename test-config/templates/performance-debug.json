@@ -2,15 +2,19 @@
     "backend" : {
         "python_path" : "dl-frameworks/intel-caffe/python",
         "class_path" : "backends.caffe_backend.CaffeBackend",
-        "engine" : "MKLDNN"
+        "engine" : "MKL2017"
     },
     "application" : "applications.performance",
     "model" : {
-        "topology": "dl-models/bvlc_googlenet/train_val.prototxt"
+        "topology": "dl-models/bvlc_googlenet/img_train_val.prototxt",
+	"type" : "test"
     },
     "batch_size" : 4,
-    "iteration" : 3,
-    "getReport" : 1,	
+    "iteration" : 100,
+    "getReport" : {
+	"ReportOrder" : "forward performance"
+    
+    },
     "out_dir" : "out/performance-caffe",
      "reference" : {
 	"result_dir": "out/performance-caffe"

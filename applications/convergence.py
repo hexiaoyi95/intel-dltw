@@ -17,10 +17,12 @@ def cal4result(backend, config):
 
         # print backend.net.blobs['data'].data
         backend.forward()
+
         #backend.get_layer_accuracy_output_debug()
         # print backend.net.blobs['data'].data
         logger.debug('processing {}th backward'.format(i))
-        backend.backward()
+        #backend.backward()
+
     #datas, diffs = backend.get_layer_accuracy_output()
     logger.debug('collecting data')
     result = backend.get_layer_accuracy_output_debug()
@@ -35,8 +37,7 @@ def test_layer_accuracy(backend, config):
 
     check_result = list()
     result = cal4result(backend, config)
-    if os.path.exists(config.out_dir):
-        shutil.rmtree(config.out_dir)
+
     for layer_name, l in result.iteritems():
         for blob_name, np_list in l:
             for i, np_arry in enumerate(np_list):
