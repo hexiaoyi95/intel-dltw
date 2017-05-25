@@ -13,21 +13,15 @@ logger = logging.getLogger('root')
 def cal4result(backend, config):
 
     for i in xrange(config.iteration):
-        logger.debug('processing {}th forward'.format(i))
-
-        # print backend.net.blobs['data'].data
+        logger.info('processing {}th forward'.format(i))
         backend.forward()
+        if not config.forward_only:
+            logger.info('processing {}th backward'.format(i))
+            backend.backward()
 
-        #backend.get_layer_accuracy_output_debug()
-        # print backend.net.blobs['data'].data
-        logger.debug('processing {}th backward'.format(i))
-        #backend.backward()
-
-    #datas, diffs = backend.get_layer_accuracy_output()
     logger.debug('collecting data')
     result = backend.get_layer_accuracy_output_debug()
 
-    #return datas,diffs
     return result
 
 
@@ -62,18 +56,12 @@ def test_layer_accuracy(backend, config):
 
     if hasattr(config,'reference'):
         result_dir = os.path.expanduser(config.reference.result_dir)
-        #check_result = layer_accuracy_debug(batch_name, datas, diffs, result_dir, check_result, config.precision)
         this_batch_result = layer_accuracy_convergence(backend, result,config.out_dir, result_dir, config.precision)
         check_result.extend(this_batch_result)
 
 
-    # name_file =  os.path.join(config.out_dir, 'name.json')
-    # utils.io.dict2json(batches_name, name_file)
-
-    #pprint.pprint(check_result)
-    #print check_result
     if hasattr(config,'reference'):
-        with open(os.path.join(config.out_dir, 'layer_accuracy_Report'),'w') as fp:
+        with open(os.path.join(config.out_dir, 'test_report.txt'),'w') as fp:
             for line in check_result:
                 for word in line:
                     #print
@@ -85,9 +73,6 @@ def test_layer_accuracy(backend, config):
             fp.write('\n')
             fp.write('\n')
 
-
-    #res_check_file = os.path.join(config.out_dir, 'check.json')
-    #utils.io.dict2json(check_result, res_check_file)
 
 def run(config):
     backend_class = backends_factory(config.backend)

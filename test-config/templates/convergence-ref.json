@@ -1,15 +1,16 @@
 {
     "backend" : {
-        "python_path" : "dl-frameworks/bvlc-caffe/python",
+        "python_path" : "dl-frameworks/intel-caffe/python",
         "class_path" : "backends.caffe_backend.CaffeBackend",
         "engine" : "default"
     },
     "application" : "applications.convergence",
     "model" : {
-        "topology" : "dl-models/bvlc_googlenet/img_train_val.prototxt" ,
+        "topology" : "dl-models/vgg_19/img_train_val.prototxt" ,
+        "weights" : "dl-models/vgg_19/vgg_19.caffemodel",
         "type" : "train"
     },
+    "forward_only": true,
     "iteration" : 1,
-    "out_dir" : "out/layer-accuracy-ref"
-
+    "out_dir" : "out/convergency/ref"
 }

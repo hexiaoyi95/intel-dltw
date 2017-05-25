@@ -6,13 +6,15 @@
     },
     "application" : "applications.convergence",
     "model" : {
-        "topology" : "dl-models/bvlc_googlenet/img_train_val.prototxt" ,
+        "topology" : "dl-models/vgg_19/img_train_val.prototxt" ,
+        "weights" : "dl-models/vgg_19/vgg_19.caffemodel",
         "type" : "train"
     },
+    "forward_only" : true,
     "iteration" : 1,
-    "out_dir" : "out/layer-accuracy-intel",
+    "out_dir" : "out/convergency/out",
     "reference" : {
-        "result_dir": "out/layer-accuracy-ref"
+        "result_dir": "out/convergency/ref"
     },
     "precision" : 0.001
 }

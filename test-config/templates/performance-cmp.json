@@ -10,7 +10,7 @@
     },
     "batch_size" : 4,
     "iteration" : 100,
-    "getReport" : 1,	
+    "getReport" : 1,
     "out_dir" : "out/performance-caffe",
      "reference" : {
 	"result_dir": "out/performance-caffe"
