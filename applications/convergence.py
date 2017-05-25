@@ -63,7 +63,7 @@ def test_layer_accuracy(backend, config):
     if hasattr(config,'reference'):
         result_dir = os.path.expanduser(config.reference.result_dir)
         #check_result = layer_accuracy_debug(batch_name, datas, diffs, result_dir, check_result, config.precision)
-        this_batch_result = layer_accuracy_convergence(backend, result,result_dir, config.precision)
+        this_batch_result = layer_accuracy_convergence(backend, result,config.out_dir, result_dir, config.precision)
         check_result.extend(this_batch_result)
 
 

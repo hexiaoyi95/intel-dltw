@@ -260,7 +260,7 @@ def find_fail(data, data_ref, ctx, precision):
     result.insert(0,[ctx, data.shape, count, data.size])
     return result
 
-def layer_accuracy_convergence(backend, test_result, ref_dir, precision=1e-04 ):
+def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision=1e-04 ):
 
     this_batch_result = list()
     this_batch_result.append(['-']*40)
@@ -275,6 +275,7 @@ def layer_accuracy_convergence(backend, test_result, ref_dir, precision=1e-04 ):
         count +=1
         this_layer_pass = 'pass'
         this_layer_result = list()
+        detailTXT = list()
         for j, [blob_name, np_list] in enumerate(l):
             ref_sample_list = list()
             sample_list = list()
@@ -283,6 +284,7 @@ def layer_accuracy_convergence(backend, test_result, ref_dir, precision=1e-04 ):
                 blob_title.insert(0, 'paramaters_diff: ')
             else:
                 this_layer_result.append(blob_title)
+                detailTXT.append(blob_title)
             for i, np_arry in enumerate(np_list):
                 if blob_name == 'params_diff':
                     if i == 0:
@@ -307,7 +309,9 @@ def layer_accuracy_convergence(backend, test_result, ref_dir, precision=1e-04 ):
                 else:
                     this_arry = 'fail'
                     this_layer_pass = 'fail'
-                    this_layer_result.extend(find_fail(np_arry, ref_data, ctx , precision))
+                    datail_diff = find_fail(np_arry, ref_data, ctx , precision)
+                    this_layer_result.extend(datail_diff[:11])
+                    detailTXT.extend(datail_diff)
                 if layer_name == last_layer_name and i==0:
                     fwd_accuracy = 'fail'
                 if i == 1 and first_param:
@@ -325,8 +329,20 @@ def layer_accuracy_convergence(backend, test_result, ref_dir, precision=1e-04 ):
             #this_layer_result.append(sample_list)
             #this_layer_result.append(ref_sample_list)
         this_layer_result.insert(0,['%04d' % count, backend.get_layer_type(count), layer_name, this_layer_pass])
-        this_layer_result.insert.append(['-']*40)
+        detailTXT.insert(0,['%04d' % count, backend.get_layer_type(count), layer_name, this_layer_pass])
+        this_layer_result.insert(0,['-']*40)
+        detailTXT.insert(0,['-']*40)
         this_batch_result.extend(this_layer_result)
+        with open(os.path.join(out_dir, layer_name.replace('/','-'), 'fail detail.txt'),'w') as fp:
+            for line in detailTXT:
+                for word in line:
+                    fp.write(str(word))
+                    if type(word) == type('?') and  word == '-' :
+                        continue
+                    fp.write('\t')
+                fp.write('\n')
+            fp.write('\n')
+            fp.write('\n')
     this_batch_result.insert(0,['net backward: ', bwd_accuracy])
     this_batch_result.insert(0,['net forward: ', fwd_accuracy])
     return this_batch_result
