@@ -108,6 +108,8 @@ def convertToReport(res_dict, config, backend):
     ref_b_perf = dict(ref_res_dict['layers_backward_perf'])
 
     orderedKey = sorted(layers_f_perf.iterkeys(), key = lambda item:item.split('_',1)[0])
+    _orderedKey = sorted(layers_f_perf.iterKeys(), Key = lamda item:int(layers_f_perf[item][:-1]))
+    print _orderedKey
     layer_id = -1
     for key in orderedKey:
         if key != 'summary':

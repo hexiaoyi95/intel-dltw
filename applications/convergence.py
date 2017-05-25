@@ -17,9 +17,10 @@ def cal4result(backend, config):
 
         # print backend.net.blobs['data'].data
         backend.forward()
+        #backend.get_layer_accuracy_output_debug()
         # print backend.net.blobs['data'].data
         logger.debug('processing {}th backward'.format(i))
-        backend.backward();
+        backend.backward()
     #datas, diffs = backend.get_layer_accuracy_output()
     logger.debug('collecting data')
     result = backend.get_layer_accuracy_output_debug()
