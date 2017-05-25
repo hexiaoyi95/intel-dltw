@@ -6,8 +6,7 @@
     },
     "application" : "applications.convergence",
     "model" : {
-        "topology" : "dl-models/bvlc_googlenet/img_train_val.prototxt" ,
-        "weight" : "dl-models/bvlc_googlenet/bvlc_googlenet.caffemodel",
+        "topology" : "dl-models/googlenet_v2_train_val.prototxt" ,
         "type" : "train"
     },
     "iteration" : 1,
@@ -15,5 +14,5 @@
     "reference" : {
         "result_dir": "out/layer-accuracy-ref"
     },
-    "precision" : 0.01
+    "precision" : 0.001
 }

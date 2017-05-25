@@ -246,12 +246,31 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
 
     return last_res
 
+def find_fail(data, data_ref, ctx, precision):
+    result = list()
+    count = 0
+    if data.size == data_ref.size:
+        difrens = abs(data - data_ref) - data_ref*1e-02 - precision
+        for index,val in np.ndenumerate(difrens):
+			if val >= 0:
+			    count +=1
+			    result.append([count, index,data[index],data_ref[index]])	
+    else:
+	    raise Exception('compared arrys shape not match %d vs %d' %(data.size,data_ref.size))
+    result.insert(0,[ctx, data.shape, count, data.size])
+    return result
+
 def layer_accuracy_convergence(backend, test_result, ref_dir, precision=1e-04 ):
 
     this_batch_result = list()
     this_batch_result.append(['-']*40)
 
     count = -1
+    
+    last_layer_name = test_result.keys()[len(test_result)-1]
+    fwd_accuracy = 'pass'
+    bwd_accuracy = 'pass'
+    first_param = True
     for layer_name, l in test_result.iteritems():
         count +=1
         this_layer_pass = 'pass'
@@ -260,52 +279,59 @@ def layer_accuracy_convergence(backend, test_result, ref_dir, precision=1e-04 ):
             ref_sample_list = list()
             sample_list = list()
             blob_title = list()
-            for i, np_arry in enumerate(np_list):
-
-                if blob_name == 'params_diff':
-                    if i == 0:
-                        ctx = 'W'
-                    else:
-                        ctx = 'b'
-
-                else:
-                    if i == 0:
-                        ctx = 'data'
-                    else:
-                        ctx = 'diff'
-                try:
-                    ref_data = np.load(os.path.join(ref_dir,layer_name.replace('/', '-'), blob_name + '_' + ctx + '.npy'))
-                except IOError:
-                    logger.error("layer {} not found in refenence, skiping ...".format(layer_name))
-                    continue;
-
-                isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
-
-                if isequal:
-                    this_arry = 'pass'
-                else:
-                    this_arry = 'fail'
-                    this_layer_pass = 'fail'
-
-                blob_title.append(ctx + ': ' + this_arry)
-
-                ref_sample_list.append(ctx + '_ref' + ': ')
-                ref_sample_list.append(np.concatenate((ref_data.flatten()[1:6],ref_data.flatten()[-5:])))
-                sample_list.append(ctx + ': ')
-                sample_list.append(np.concatenate((np_arry.flatten()[1:6],np_arry.flatten()[-5:])))
-            if blob_name == 'params_diff':
-                blob_title.insert(0, '  paramaters_diff: ')
+			if blob_name == 'params_diff':
+            	blob_title.insert(0, 'paramaters_diff: ')
             else:
-                blob_title.insert(0, '  top_name: ' + blob_name)
-            this_layer_result.append(blob_title)
-            sample_list.insert(0, '    ')
-            ref_sample_list.insert(0, '    ')
-            this_layer_result.append(sample_list)
-            this_layer_result.append(ref_sample_list)
-        this_batch_result.append(['%04d' % count, backend.get_layer_type(count), layer_name, this_layer_pass])
-        this_batch_result.extend(this_layer_result)
-        this_batch_result.append(['-']*40)
+				blob_title.insert(0, 'top_name: ' + blob_name)	
+	    	this_layer_result.append(blob_title)     
+			for i, np_arry in enumerate(np_list):
 
+				if blob_name == 'params_diff':
+					if i == 0:
+						ctx = 'W'
+					else:
+						ctx = 'b'
+
+				else:
+					if i == 0:
+						ctx = 'data'
+					else:
+						ctx = 'diff'
+				try:
+					ref_data = np.load(os.path.join(ref_dir,layer_name.replace('/', '-'), blob_name + '_' + ctx + '.npy'))
+				except IOError:
+					logger.error("layer {} not found in refenence, skiping ...".format(layer_name))
+					continue;
+
+				isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
+
+				if isequal:
+					this_arry = 'pass'
+				else:
+					this_arry = 'fail'
+					this_layer_pass = 'fail'
+					this_layer_result.extend(find_fail(np_arry, ref_data, ctx , precision))
+				if layer_name == last_layer_name and i==0:
+					fwd_accuracy = 'fail'
+				if i == 1 and first_param:
+					bwd_accuracy = 'fail'
+					first_param = False
+				blob_title.append(ctx + ': ' + this_arry)
+
+				ref_sample_list.append(ctx + '_ref' + ': ')
+				ref_sample_list.append(np.concatenate((ref_data.flatten()[1:6],ref_data.flatten()[-5:])))
+				sample_list.append(ctx + ': ')
+				sample_list.append(np.concatenate((np_arry.flatten()[1:6],np_arry.flatten()[-5:])))
+					
+				sample_list.insert(0, '    ')
+            	ref_sample_list.insert(0, '    ')
+            #this_layer_result.append(sample_list)
+            #this_layer_result.append(ref_sample_list)
+        this_layer_result.insert(0,['%04d' % count, backend.get_layer_type(count), layer_name, this_layer_pass])
+        this_layer_result.insert.append(['-']*40)
+        this_batch_result.extend(this_layer_result)
+    this_batch_result.insert(0,['net backward: ', bwd_accuracy])
+    this_batch_result.insert(0,['net forward: ', fwd_accuracy])	
     return this_batch_result
 
 

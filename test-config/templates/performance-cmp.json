@@ -8,8 +8,8 @@
     "model" : {
         "topology": "dl-models/caffe/googlenet_v2/train_val.prototxt"
     },
-    "batch_size" : 1,
-    "iteration" : 5,
+    "batch_size" : 4,
+    "iteration" : 100,
     "getReport" : 1,	
     "out_dir" : "out/performance-caffe",
      "reference" : {
