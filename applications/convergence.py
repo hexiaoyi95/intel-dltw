@@ -21,11 +21,11 @@ def cal4result(backend, config):
         #backend.get_layer_accuracy_output_debug()
         # print backend.net.blobs['data'].data
         logger.debug('processing {}th backward'.format(i))
-        #backend.backward()
+        backend.backward()
 
     #datas, diffs = backend.get_layer_accuracy_output()
     logger.debug('collecting data')
-    result = backend.get_layer_accuracy_output_debug()
+    result = backend.get_layer_accuracy_output_debug(config)
 
     #return datas,diffs
     return result
@@ -43,9 +43,14 @@ def test_layer_accuracy(backend, config):
             for i, np_arry in enumerate(np_list):
                 if blob_name == 'params_diff':
                     if i == 0:
-                        ctx = 'W'
+                        ctx = 'W_diff'
                     else:
-                        ctx = 'b'
+                        ctx = 'b_diff'
+                elif blob_name == 'params_data':
+                    if i == 0:
+                        ctx = 'W_data'
+                    else:
+                        ctx = 'b_data'
                 else:
                     if i == 0:
                         ctx = 'data'

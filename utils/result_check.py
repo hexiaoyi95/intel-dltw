@@ -279,18 +279,20 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
         for j, [blob_name, np_list] in enumerate(l):
             ref_sample_list = list()
             sample_list = list()
-            blob_title = list()
-            if blob_name == 'params_diff':
-                blob_title.insert(0, 'paramaters_diff: ')
-            else:
-                this_layer_result.append(blob_title)
-                detailTXT.append(blob_title)
+
             for i, np_arry in enumerate(np_list):
+                blob_title = list()
+
                 if blob_name == 'params_diff':
                     if i == 0:
-                        ctx = 'W'
+                        ctx = 'W_diff'
                     else:
-                        ctx = 'b'
+                        ctx = 'b_diff'
+                elif blob_name == 'params_data':
+                    if i == 0:
+                        ctx = 'W_data'
+                    else:
+                        ctx = 'b_data'
                 else:
                     if i == 0:
                         ctx = 'data'
@@ -306,18 +308,20 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
 
                 if isequal:
                     this_arry = 'pass'
+                    blob_title.append(ctx + ': ' + this_arry)
+                    this_layer_result.append(blob_title)
                 else:
                     this_arry = 'fail'
                     this_layer_pass = 'fail'
                     datail_diff = find_fail(np_arry, ref_data, ctx , precision)
                     this_layer_result.extend(datail_diff[:11])
                     detailTXT.extend(datail_diff)
-                if layer_name == last_layer_name and i==0:
-                    fwd_accuracy = 'fail'
-                if i == 1 and first_param:
-                    bwd_accuracy = 'fail'
-                    first_param = False
-                blob_title.append(ctx + ': ' + this_arry)
+
+                    if layer_name == last_layer_name and i==0:
+                        fwd_accuracy = 'fail'
+                    if i == 1 and first_param:
+                        bwd_accuracy = 'fail'
+                        first_param = False
 
                 ref_sample_list.append(ctx + '_ref' + ': ')
                 ref_sample_list.append(np.concatenate((ref_data.flatten()[1:6],ref_data.flatten()[-5:])))
@@ -333,16 +337,17 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
         this_layer_result.insert(0,['-']*40)
         detailTXT.insert(0,['-']*40)
         this_batch_result.extend(this_layer_result)
-        with open(os.path.join(out_dir, layer_name.replace('/','-'), 'fail detail.txt'),'w') as fp:
-            for line in detailTXT:
-                for word in line:
-                    fp.write(str(word))
-                    if type(word) == type('?') and  word == '-' :
-                        continue
-                    fp.write('\t')
+        if this_layer_pass == 'fail':
+            with open(os.path.join(out_dir, layer_name.replace('/','-'), 'fail detail.txt'),'w') as fp:
+                for line in detailTXT:
+                    for word in line:
+                        fp.write(str(word))
+                        if type(word) == type('?') and  word == '-' :
+                            continue
+                        fp.write('\t')
+                    fp.write('\n')
                 fp.write('\n')
-            fp.write('\n')
-            fp.write('\n')
+                fp.write('\n')
     this_batch_result.insert(0,['net backward: ', bwd_accuracy])
     this_batch_result.insert(0,['net forward: ', fwd_accuracy])
     return this_batch_result

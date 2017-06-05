@@ -1,12 +1,13 @@
 {
     "backend" : {
-        "python_path" : "dl-frameworks/bvlc-caffe/python",
+        "python_path" : "dl-frameworks/intel-caffe/python",
         "class_path" : "backends.caffe_backend.CaffeBackend",
         "engine" : "default"
     },
     "application" : "applications.convergence",
     "model" : {
-        "topology" : "dl-models/bvlc_googlenet/img_train_val.prototxt" ,
+        "topology" : "dl-models/bvlc_googlenet/solver.prototxt" ,
+	"prototxt_type" : "solver",
         "type" : "train"
     },
     "iteration" : 1,

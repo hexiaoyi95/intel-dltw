@@ -14,6 +14,8 @@ class CaffeBackend():
         # "Use Caffe as self."
         # caffe constructor: network_file, phase, level, stages, weight, engine
         topology_path = os.path.expanduser(str(config.model.topology))
+
+
         if  (hasattr(config.backend, 'engine')) and (config.backend.engine != "default"):
             engine = str(config.backend.engine)
         else:
@@ -31,11 +33,17 @@ class CaffeBackend():
 
         caffe.set_mode_cpu()
         caffe.set_random_seed(0)
-        try:
-            logger.debug("using engine: {}".format(engine))
-            self.net = caffe.Net(topology_path, caffe.TRAIN, weights=weight_path, engine=engine)
-        except:
-            self.net = caffe.Net(topology_path, phase, weights=weight_path)
+
+        if config.model.prototxt_type  == 'solver':
+            self.solver = caffe.get_solver(str(config.model.topology))
+            self.net = self.solver.net
+
+        else:
+            try:
+                logger.debug("using engine: {}".format(engine))
+                self.net = caffe.Net(topology_path, caffe.TRAIN, weights=weight_path, engine=engine)
+            except:
+                self.net = caffe.Net(topology_path, phase, weights=weight_path)
 
     def shuffle_inputs(self):
         utils.benchmark.shuffle_inputs(self.inputs)
@@ -240,30 +248,32 @@ class CaffeBackend():
 
         return datas,diffs
 
-    def get_layer_accuracy_output_debug(self,data_type='top_blob'):
+    def get_layer_accuracy_output_debug(self, config):
         result = OrderedDict()
         count = 0
 
         for layer_name,top_blob_names in self.net.top_names.iteritems():
             count +=1
             layer_result = list()
-	    for blob_name in top_blob_names:
-	        top_blob = self.net.blobs[blob_name]
- 		
-		data = top_blob.data.copy()
-	        diff = top_blob.diff.copy()
-		layer_result.append([blob_name.replace('/','-'),[data,diff]])
-	    
-	    try:
+
+            for blob_name in top_blob_names:
+                top_blob = self.net.blobs[blob_name]
+                data = top_blob.data.copy()
+                diff = top_blob.diff.copy()
+                layer_result.append([blob_name.replace('/','-'),[data,diff]])
+
+            try:
                 paramater = self.net.params[layer_name]
             except:
                 pass
             else:
+                if config.model.prototxt_type == 'solver':
+                    layer_result.append(['params_data',[item.data.copy() for item in paramater]])
                 layer_result.append(['params_diff',[item.diff.copy() for item in paramater]])
 
                 #result[layer_name].append(['params_diff',[item.diff.copy for item in paramater]])
-            
-	    result[layer_name] = layer_result
+
+            result[layer_name] = layer_result
         return result
 
 
