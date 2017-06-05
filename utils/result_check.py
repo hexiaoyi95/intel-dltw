@@ -301,7 +301,7 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
                 try:
                     ref_data = np.load(os.path.join(ref_dir,layer_name.replace('/', '-'), blob_name + '_' + ctx + '.npy'))
                 except IOError:
-                    logger.error("layer {} not found in refenence, skiping ...".format(layer_name))
+                    logger.warn("blob {} not found in refenence, skiping ...".format(blob_name))
                     continue;
 
                 isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)

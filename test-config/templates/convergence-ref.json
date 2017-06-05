@@ -10,7 +10,7 @@
 	"prototxt_type" : "solver",
         "type" : "train"
     },
+    "forward_only": true,
     "iteration" : 1,
-    "out_dir" : "out/layer-accuracy-ref"
-
+    "out_dir" : "out/convergency/ref"
 }

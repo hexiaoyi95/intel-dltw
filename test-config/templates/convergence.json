@@ -10,10 +10,11 @@
         "prototxt_type" : "solver",
 	"type" : "train"
     },
+    "forward_only" : true,
     "iteration" : 1,
-    "out_dir" : "out/layer-accuracy-intel",
+    "out_dir" : "out/convergency/out",
     "reference" : {
-        "result_dir": "out/layer-accuracy-ref"
+        "result_dir": "out/convergency/ref"
     },
     "precision" : 0.001
 }
