@@ -11,13 +11,15 @@ from collections import OrderedDict
 logger = logging.getLogger('root')
 
 def cal4result(backend, config):
-
-    for i in xrange(config.iteration):
-        logger.info('processing {}th forward'.format(i))
-        backend.forward()
-        if not config.forward_only:
-            logger.info('processing {}th backward'.format(i))
-            backend.backward()
+    if config.model.prototxt_type == 'solver':
+        backend.step(config.iteration)
+    else:
+        for i in xrange(config.iteration):
+            logger.info('processing {}th forward'.format(i))
+            backend.forward()
+            if not config.forward_only:
+                logger.info('processing {}th backward'.format(i))
+                backend.backward()
 
     logger.debug('collecting data')
     result = backend.get_layer_accuracy_output_debug(config)
@@ -31,7 +33,7 @@ def test_layer_accuracy(backend, config):
 
     check_result = list()
     result = cal4result(backend, config)
-
+    shutil.rmtree(config.out_dir)
     for layer_name, l in result.iteritems():
         for blob_name, np_list in l:
             for i, np_arry in enumerate(np_list):

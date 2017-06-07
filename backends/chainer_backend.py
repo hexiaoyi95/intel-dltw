@@ -170,7 +170,6 @@ class ChainerBackend():
 
         return datas, weights
 
-
     def get_layers_perf(self,direction):
         """
         Parameters:

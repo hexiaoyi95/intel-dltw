@@ -8,6 +8,7 @@ import caffe
 import inspect
 from collections import OrderedDict
 import pprint
+import shutil
 logger = logging.getLogger('root')
 class CaffeBackend():
     def __init__(self, config):
@@ -35,7 +36,13 @@ class CaffeBackend():
         caffe.set_random_seed(0)
 
         if config.model.prototxt_type  == 'solver':
-            self.solver = caffe.get_solver(str(config.model.topology))
+            logger.debug("using engine: {}".format(engine))
+            shutil.copy(str(config.model.topology),'temp_solver.prototxt')
+            if engine != 'default':
+                with open('temp_solver.prototxt','a') as fp:
+                    fp.write("engine: \"{}\"   ".format(engine))
+            self.solver = caffe.get_solver('temp_solver.prototxt')
+            os.remove('temp_solver.prototxt')
             self.net = self.solver.net
 
         else:
@@ -296,6 +303,8 @@ class CaffeBackend():
     def backward_layer(self, layer_id):
         self.net._backward(layer_id, layer_id)
 
+    def step(self, iter_num =1):
+        self.solver.step(iter_num)
 
     def infer(self):
         self.net.forward()

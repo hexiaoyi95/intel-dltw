@@ -242,8 +242,6 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
                 flag = 1
             last_res[key] &= weight_isequal
 
-
-
     return last_res
 
 def find_fail(data, data_ref, ctx, precision):
@@ -270,6 +268,7 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
     last_layer_name = test_result.keys()[len(test_result)-1]
     fwd_accuracy = 'pass'
     bwd_accuracy = 'pass'
+    update_accuracy = 'pass'
     first_param = True
     for layer_name, l in test_result.iteritems():
         count +=1
@@ -319,24 +318,32 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
 
                     if layer_name == last_layer_name and i==0:
                         fwd_accuracy = 'fail'
-                    if i == 1 and first_param:
+                    if blob_name != 'params_data' and i == 1 and first_param:
                         bwd_accuracy = 'fail'
                         first_param = False
+                    if blob_name == 'params_data':
+                        update_accuracy = 'fail'
 
-                ref_sample_list.append(ctx + '_ref' + ': ')
-                ref_sample_list.append(np.concatenate((ref_data.flatten()[1:6],ref_data.flatten()[-5:])))
-                sample_list.append(ctx + ': ')
-                sample_list.append(np.concatenate((np_arry.flatten()[1:6],np_arry.flatten()[-5:])))
 
-            sample_list.insert(0, '    ')
-            ref_sample_list.insert(0, '    ')
+            #     ref_sample_list.append(ctx + '_ref' + ': ')
+            #     ref_sample_list.append(np.concatenate((ref_data.flatten()[1:6],ref_data.flatten()[-5:])))
+            #     sample_list.append(ctx + ': ')
+            #     sample_list.append(np.concatenate((np_arry.flatten()[1:6],np_arry.flatten()[-5:])))
+
+            # sample_list.insert(0, '    ')
+            # ref_sample_list.insert(0, '    ')
             #this_layer_result.append(sample_list)
             #this_layer_result.append(ref_sample_list)
+
+        # add the tile to the result of this layer
         this_layer_result.insert(0,['%04d' % count, backend.get_layer_type(count), layer_name, this_layer_pass])
         detailTXT.insert(0,['%04d' % count, backend.get_layer_type(count), layer_name, this_layer_pass])
         this_layer_result.insert(0,['-']*40)
         detailTXT.insert(0,['-']*40)
+
+        #add the result of this layer to total result
         this_batch_result.extend(this_layer_result)
+
         if this_layer_pass == 'fail':
             with open(os.path.join(out_dir, layer_name.replace('/','-'), 'fail detail.txt'),'w') as fp:
                 for line in detailTXT:
@@ -348,8 +355,11 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
                     fp.write('\n')
                 fp.write('\n')
                 fp.write('\n')
+
+    this_batch_result.insert(0,['weight update: ', update_accuracy])
     this_batch_result.insert(0,['net backward: ', bwd_accuracy])
     this_batch_result.insert(0,['net forward: ', fwd_accuracy])
+
     return this_batch_result
 
 

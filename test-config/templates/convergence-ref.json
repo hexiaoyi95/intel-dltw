@@ -10,7 +10,7 @@
 	"prototxt_type" : "solver",
         "type" : "train"
     },
-    "forward_only": true,
-    "iteration" : 1,
+    "forward_only": false,
+    "iteration" : 2,
     "out_dir" : "out/convergency/ref"
 }
