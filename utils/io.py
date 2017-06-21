@@ -46,7 +46,7 @@ def get_input_from_txt(input_txt, img_num = None):
     file = open(input_txt,"r")
     for line in file:
         line = line[:-1] #dele \n
-        input_list.append(txt_path +"/"+ line)
+        input_list.append(line)
 
     if img_num == None:
         img_num = len(input_list)

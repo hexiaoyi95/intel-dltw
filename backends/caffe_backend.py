@@ -23,6 +23,7 @@ class CaffeBackend():
             engine = 'CAFFE'
 
         if hasattr(config.model, 'weight'):
+            logger.debug("loading weights from: {}".format(config.model.weight))
             weight_path = os.path.expanduser(str(config.model.weight))
         else:
             weight_path = None
@@ -44,7 +45,8 @@ class CaffeBackend():
             self.solver = caffe.get_solver('temp_solver.prototxt')
             os.remove('temp_solver.prototxt')
             self.net = self.solver.net
-
+	    if weight_path != None:
+	    	self.net.copy_from(weight_path)
         else:
             try:
                 logger.debug("using engine: {}".format(engine))

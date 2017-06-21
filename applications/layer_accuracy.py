@@ -1,4 +1,4 @@
-import sys, os
+:import sys, os
 import logging
 import utils
 from utils.result_check import check_layer_accuracy_result
@@ -24,8 +24,6 @@ def test_layer_accuracy(backend, config):
 
     logging.debug("testing layer accuracy")
     input_list = utils.io.get_input_from_txt(config.input_path)
-
-
     batches = utils.io.slice2batches(input_list, config.batch_size)
     total_batches = len(batches)
 

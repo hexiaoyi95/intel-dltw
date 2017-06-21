@@ -91,17 +91,17 @@ def convertToReport(res_dict, config, backend):
     net_time = list()
     aTXT.append('net performance: ')
     net_time.append('forward: ')
-    net_time.append('%.4f' % (res_dict['net_forward_perf'][0]))
-    net_time.append('%.4f' % (ref_res_dict['net_forward_perf'][0]))
-    net_time.append('%.2f' % (-100*(res_dict['net_forward_perf'][0] - ref_res_dict['net_forward_perf'][0])/ref_res_dict['net_forward_perf'][0]) + '%')
+    net_time.append('time: {:<9.4f} ms'.format(res_dict['net_forward_perf'][0]))
+    net_time.append('reference time: {:<9.4f} ms'.format(ref_res_dict['net_forward_perf'][0]))
+    net_time.append('relative error: {:<6.2f}'.format(-100*(res_dict['net_forward_perf'][0] - ref_res_dict['net_forward_perf'][0])/ref_res_dict['net_forward_perf'][0]) + '%')
     aTXT.append(net_time)
     net_time = list()
     net_time.append('backward: ')
-    net_time.append('%.4f' % (res_dict['net_backward_perf'][0]))
-    net_time.append('%.4f' % (ref_res_dict['net_backward_perf'][0]))
-    net_time.append('%.2f' %(-100*(res_dict['net_backward_perf'][0] - ref_res_dict['net_backward_perf'][0])/ref_res_dict['net_backward_perf'][0]) + '%')
+    net_time.append('time: {:<9.4f} ms'.format(res_dict['net_backward_perf'][0]))
+    net_time.append('reference time: {:<9.4f} ms'.format(ref_res_dict['net_backward_perf'][0]))
+    net_time.append('realative error:{:<6.2f} ms'.format(-100*(res_dict['net_backward_perf'][0] - ref_res_dict['net_backward_perf'][0])/ref_res_dict['net_backward_perf'][0]) + '%')
     aTXT.append(net_time)
-    aTXT.append(['-']*40)
+    aTXT.append(['-']*80)
     layers_f_perf = dict(res_dict['layers_forward_perf'])
     layers_b_perf = dict(res_dict['layers_backward_perf'])
     ref_f_perf = dict(ref_res_dict['layers_forward_perf'])
@@ -113,15 +113,16 @@ def convertToReport(res_dict, config, backend):
 	if key != 'summary':
  	    fwd_perf_perctg[key] = -100*(layers_f_perf[key] - ref_f_perf[key])/ref_f_perf[key]
 	    bwd_perf_perctg[key] = -100*(layers_b_perf[key] - ref_b_perf[key])/ref_b_perf[key]
-    if config.getReport.ReportOrder == 'default':
+    if config.getReport.reportOrder == 'default':
     	orderedKey = sorted(layers_f_perf.iterkeys(), key = lambda item:item)
-    elif config.getReport.ReportOrder == 'forward performance':
+    elif config.getReport.reportOrder == 'forward performance':
 	orderedKey = sorted(fwd_perf_perctg.iterkeys(), key = lambda item:fwd_perf_perctg[item])
-    elif config.getReport.ReportOrder == 'backward performance':
+    elif config.getReport.reportOrder == 'backward performance':
 	orderedKey = sorted(bwd_perf_perctg.iterkeys(), key = lambda item:bwd_perf_perctg[item])
     else:
 	raise Exception('Unsupported reprort order,choose default,forward performance or backward performance')
     layer_id = -1
+    aTXT.append('layer by layer performance')
     for key in orderedKey:
         if key != 'summary':
             #print key
@@ -132,18 +133,18 @@ def convertToReport(res_dict, config, backend):
             layer_time.append('layer_type: {}'.format(backend.get_layer_type(key)))
             aTXT.append(layer_time)
             layer_time = list()
-            layer_time.append('forward time(ms): ')
-            layer_time.append('%.4f' % (layers_f_perf[key]))
-            layer_time.append('%.4f' % (ref_f_perf[key]))
-            layer_time.append( '%.2f' % (fwd_perf_perctg[key] ) + '%')
+            layer_time.append('forward: ')
+            layer_time.append('time: {:<9.4f} ms'.format(layers_f_perf[key]))
+            layer_time.append('reference time: {:<9.4f} ms'.format(ref_f_perf[key]))
+            layer_time.append('relative error: {:<6.2f}'.format(fwd_perf_perctg[key] ) + '%')
             aTXT.append(layer_time)
             layer_time = list()
-            layer_time.append('backward time(ms): ')
-            layer_time.append('%.4f' % (layers_b_perf[key]))
-            layer_time.append('%.4f' % (ref_b_perf[key]))
-            layer_time.append( '%.2f' % ( bwd_perf_perctg[key] )+ '%')
+            layer_time.append('backward: ')
+            layer_time.append('time: {:<9.4f} ms'.format(layers_b_perf[key]))
+            layer_time.append('reference time: {:<9.4f} ms'.format(ref_b_perf[key]))
+            layer_time.append('relative error: {:<6.2f}'.format( bwd_perf_perctg[key] )+ '%')
             aTXT.append(layer_time)
-            aTXT.append(['-']*40)
+            aTXT.append(['-']*80)
 
     with open(os.path.join(config.out_dir, 'performance_cmp_report.txt'),'w') as fp:
         for line in aTXT:

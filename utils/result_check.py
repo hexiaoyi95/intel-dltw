@@ -209,7 +209,7 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
     for key in ordered_key:
         ref_data = np.load(ref_dir + '/' + num + '/' + key.replace('/', '-') + '_' + 'datas' + '.npy')
 
-        data_isequal = np.allclose(test_datas[key], ref_data,  rtol=1e-02, atol=1e-04, equal_nan = True)
+        data_isequal = np.allclose(test_datas[key], ref_data,  rtol=1e-02, atol=1e-04, equal_nan = False)
 
         if first_result:
             last_res[key] = data_isequal
@@ -229,7 +229,7 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
         if np.average(ref_weight) < 1e-06 and np.average(test_diffs[key]) < 1e-06:
             weight_isequal = True
         else:
-            weight_isequal= np.allclose(test_diffs[key], ref_weight, rtol=1e-02, atol=1e-04, equal_nan = True)
+            weight_isequal= np.allclose(test_diffs[key], ref_weight, rtol=1e-02, atol=1e-04, equal_nan = False)
 
         if first_result:
             last_res[key] = weight_isequal
@@ -248,14 +248,20 @@ def find_fail(data, data_ref, ctx, precision):
     result = list()
     count = 0
     if data.size == data_ref.size:
-        difrens = abs(data - data_ref) - data_ref*1e-02 - precision
+        difrens = abs(data - data_ref) - abs(data_ref)*1e-02 - precision
         for index,val in np.ndenumerate(difrens):
             if val >= 0:
                 count +=1
                 result.append([count, index,data[index],data_ref[index]])
+	    if count >= 100:
+		count = 0
+	        break
     else:
         raise Exception('compared arrys shape not match %d vs %d' %(data.size,data_ref.size))
-    result.insert(0,[ctx, data.shape, count, data.size])
+    if count == 0:
+	result.insert(0, [ctx, data.shape, '>100', data.size])
+    else:
+	result.insert(0,[ctx, data.shape, count, data.size])
     return result
 
 def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision=1e-04 ):
@@ -281,17 +287,10 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
 
             for i, np_arry in enumerate(np_list):
                 blob_title = list()
-
                 if blob_name == 'params_diff':
-                    if i == 0:
-                        ctx = 'W_diff'
-                    else:
-                        ctx = 'b_diff'
+                    ctx = 'params_{}_diff'.format(i)
                 elif blob_name == 'params_data':
-                    if i == 0:
-                        ctx = 'W_data'
-                    else:
-                        ctx = 'b_data'
+                    ctx = 'params_{}_data'.format(i)
                 else:
                     if i == 0:
                         ctx = 'data'
@@ -312,15 +311,18 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
                 else:
                     this_arry = 'fail'
                     this_layer_pass = 'fail'
+		    #logger.debug('layer_name {}, blob_name {}, {} '.format(layer_name, blob_name, i))
                     datail_diff = find_fail(np_arry, ref_data, ctx , precision)
                     this_layer_result.extend(datail_diff[:11])
                     detailTXT.extend(datail_diff)
 
-                    if layer_name == last_layer_name and i==0:
+                    if layer_name == last_layer_name and ctx == 'data':
                         fwd_accuracy = 'fail'
-                    if blob_name != 'params_data' and i == 1 and first_param:
+
+                    if (blob_name == 'params_diff' or ctx == 'diff')and first_param:
                         bwd_accuracy = 'fail'
                         first_param = False
+
                     if blob_name == 'params_data':
                         update_accuracy = 'fail'
 

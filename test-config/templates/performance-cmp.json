@@ -1,16 +1,21 @@
 {
     "backend" : {
-        "python_path" : "dl-frameworks/intel-caffe/python",
+        "python_path" : "dl-frameworks/dl_framework-intel_caffe/python",
         "class_path" : "backends.caffe_backend.CaffeBackend",
         "engine" : "MKLDNN"
     },
     "application" : "applications.performance",
     "model" : {
-        "topology": "dl-models/caffe/googlenet_v2/train_val.prototxt"
+        "topology": "dl-models/vgg_19/img_train_val.prototxt",
+	"prototxt_type" : "train_val",
+	"type" : "train"
     },
-    "batch_size" : 4,
-    "iteration" : 100,
-    "getReport" : 1,
+    "batch_size" : 1,
+    "iteration" : 50,
+    "getReport" :
+    {
+	"reportOrder" : "default"
+    },
     "out_dir" : "out/performance-caffe",
      "reference" : {
 	"result_dir": "out/performance-caffe"
