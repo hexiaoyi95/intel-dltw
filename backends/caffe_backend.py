@@ -45,12 +45,12 @@ class CaffeBackend():
             self.solver = caffe.get_solver('temp_solver.prototxt')
             os.remove('temp_solver.prototxt')
             self.net = self.solver.net
-	    if weight_path != None:
-	    	self.net.copy_from(weight_path)
+	        if weight_path != None:
+	    	    self.net.copy_from(weight_path)
         else:
             try:
                 logger.debug("using engine: {}".format(engine))
-                self.net = caffe.Net(topology_path, caffe.TRAIN, weights=weight_path, engine=engine)
+                self.net = caffe.Net(topology_path, phase, weights=weight_path, engine=engine)
             except:
                 self.net = caffe.Net(topology_path, phase, weights=weight_path)
 
@@ -269,6 +269,9 @@ class CaffeBackend():
                 top_blob = self.net.blobs[blob_name]
                 data = top_blob.data.copy()
                 diff = top_blob.diff.copy()
+                print '='*40
+                print blob_name
+                print data
                 layer_result.append([blob_name.replace('/','-'),[data,diff]])
 
             try:

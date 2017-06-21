@@ -14,6 +14,10 @@ def cal4result(backend, config):
     if config.model.prototxt_type == 'solver':
         backend.step(config.iteration)
     else:
+        if config.model.prototxt_type == 'deploy':
+            input_list = utils.io.get_input_from_txt(config.input_path)
+            batches = utils.io.slice2batches(input_list, config.batch_size)
+            backend.prepare_classify(batches[0], config)
         for i in xrange(config.iteration):
             logger.info('processing {}th forward'.format(i))
             backend.forward()

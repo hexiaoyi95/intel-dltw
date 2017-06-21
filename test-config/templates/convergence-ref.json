@@ -1,16 +1,20 @@
 {
     "backend" : {
-        "python_path" : "dl-frameworks/intel-caffe/python",
+        "python_path" : "dl-frameworks/dl_framework-intel_caffe/python",
         "class_path" : "backends.caffe_backend.CaffeBackend",
         "engine" : "default"
     },
     "application" : "applications.convergence",
     "model" : {
-        "topology" : "dl-models/bvlc_googlenet/solver.prototxt" ,
-	"prototxt_type" : "solver",
-        "type" : "train"
+        "topology" : "dl-models/googlenet_v2/deploy.prototxt" ,
+	"weight" : "dl-models/googlenet_v2/googlenet_v2.caffemodel",
+	"prototxt_type" : "deploy",
+        "type" : "test"
     },
-    "forward_only": false,
+    "input_path" : "dl-data/ilsvrc12/test224.txt",
+    "mean_value" : [104,117,123],
+    "batch_size" : 1,
+    "forward_only": true,
     "iteration" : 2,
     "out_dir" : "out/convergency/ref"
 }
