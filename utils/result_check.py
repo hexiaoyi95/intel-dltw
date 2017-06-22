@@ -5,7 +5,7 @@ logger = logging.getLogger('root')
 PRECISION = 1e-4
 import pprint
 import os
-
+import math
 
 def iscloseFP(a, b, precision=PRECISION):
     return abs(a-b) < precision
@@ -248,20 +248,22 @@ def find_fail(data, data_ref, ctx, precision):
     result = list()
     count = 0
     if data.size == data_ref.size:
+        
         difrens = abs(data - data_ref) - abs(data_ref)*1e-02 - precision
         for index,val in np.ndenumerate(difrens):
-            if val >= 0:
+            if val >= 0 or math.isnan(data[index]) or math.isnan(data_ref[index]):
                 count +=1
-                result.append([count, index,data[index],data_ref[index]])
-	    if count >= 100:
-		count = 0
-	        break
+                result.append([count, index, str(data[index]) , str(data_ref[index])])
+            if count >= 100:
+                count = 0
+                break
     else:
         raise Exception('compared arrys shape not match %d vs %d' %(data.size,data_ref.size))
+    result.insert(0,['id','coordinate','test value','reference value'])
     if count == 0:
-	result.insert(0, [ctx, data.shape, '>100', data.size])
+        result.insert(1, [ctx, 'blob shape: ' + str(data.shape), 'total fail: >{:.4f}%'.format(100.0/data.size*100)])
     else:
-	result.insert(0,[ctx, data.shape, count, data.size])
+        result.insert(0,[ctx, 'blob shape: '+ str(data.shape) , 'total fail: {:.4f}%'.format(float(count)/data.size*100)])
     return result
 
 def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision=1e-04 ):
@@ -293,14 +295,15 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
                     ctx = 'params_{}_data'.format(i)
                 else:
                     if i == 0:
-                        ctx = 'data'
+                        ctx = 'blob_{}_data'.format(j)
                     else:
-                        ctx = 'diff'
+                        ctx = 'blob_{}_diff'.format(j)
                 try:
                     ref_data = np.load(os.path.join(ref_dir,layer_name.replace('/', '-'), blob_name + '_' + ctx + '.npy'))
                 except IOError:
                     logger.warn("blob {} not found in refenence, skiping ...".format(blob_name))
-                    continue;
+                    this_layer_result.append(['can not find {} in reference,skiped'.format(ctx)])
+                    continue
 
                 isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
 
@@ -338,7 +341,7 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
             #this_layer_result.append(ref_sample_list)
 
         # add the tile to the result of this layer
-        this_layer_result.insert(0,['%04d' % count, backend.get_layer_type(count), layer_name, this_layer_pass])
+        this_layer_result.insert(0,['layer id: %04d' % count, 'layer type: '+ backend.get_layer_type(count), 'layer name: '+ layer_name, this_layer_pass])
         detailTXT.insert(0,['%04d' % count, backend.get_layer_type(count), layer_name, this_layer_pass])
         this_layer_result.insert(0,['-']*40)
         detailTXT.insert(0,['-']*40)

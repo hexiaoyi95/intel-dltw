@@ -18,6 +18,7 @@
     },
     "out_dir" : "out/performance-caffe",
      "reference" : {
-	"result_dir": "out/performance-caffe"
+	"result_dir": "out/performance-caffe",
+	"engine" : "default"
     }
 }

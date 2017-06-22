@@ -11,7 +11,7 @@
 	"type" : "train"
     },
     "batch_size" : 1,
-    "iteration" : 50,
+    "iteration" : 1000,
     "out_dir" : "out/performance-caffe"
 
 }

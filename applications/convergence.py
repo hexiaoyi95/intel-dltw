@@ -39,7 +39,7 @@ def test_layer_accuracy(backend, config):
     result = cal4result(backend, config)
     shutil.rmtree(config.out_dir)
     for layer_name, l in result.iteritems():
-        for blob_name, np_list in l:
+        for j,[blob_name, np_list] in enumerate(l):
             for i, np_arry in enumerate(np_list):
                 if blob_name == 'params_diff':
                     if i == 0:
@@ -53,9 +53,9 @@ def test_layer_accuracy(backend, config):
                         ctx = 'b_data'
                 else:
                     if i == 0:
-                        ctx = 'data'
+                        ctx = 'blob_{}_data'.format(j)
                     else:
-                        ctx = 'diff'
+                        ctx = 'blob_{}_diff'.format(j)
 
                 np_name = os.path.join(config.out_dir, layer_name.replace('/','-'), blob_name + '_' + ctx)
                 np_name = os.path.expanduser(np_name)

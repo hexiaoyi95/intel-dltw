@@ -45,7 +45,7 @@ class CaffeBackend():
             self.solver = caffe.get_solver('temp_solver.prototxt')
             os.remove('temp_solver.prototxt')
             self.net = self.solver.net
-	        if weight_path != None:
+            if weight_path != None:
 	    	    self.net.copy_from(weight_path)
         else:
             try:
@@ -269,9 +269,6 @@ class CaffeBackend():
                 top_blob = self.net.blobs[blob_name]
                 data = top_blob.data.copy()
                 diff = top_blob.diff.copy()
-                print '='*40
-                print blob_name
-                print data
                 layer_result.append([blob_name.replace('/','-'),[data,diff]])
 
             try:
@@ -281,7 +278,7 @@ class CaffeBackend():
             else:
                 if config.model.prototxt_type == 'solver':
                     layer_result.append(['params_data',[item.data.copy() for item in paramater]])
-                layer_result.append(['params_diff',[item.diff.copy() for item in paramater]])
+                    layer_result.append(['params_diff',[item.diff.copy() for item in paramater]])
 
                 #result[layer_name].append(['params_diff',[item.diff.copy for item in paramater]])
 
