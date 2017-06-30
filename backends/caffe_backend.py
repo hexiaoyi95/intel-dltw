@@ -276,7 +276,7 @@ class CaffeBackend():
             except:
                 pass
             else:
-                if config.model.prototxt_type == 'solver':
+                if config.model.prototxt_type == 'solver' or config.model.prototxt_type == 'train_val':
                     layer_result.append(['params_data',[item.data.copy() for item in paramater]])
                     layer_result.append(['params_diff',[item.diff.copy() for item in paramater]])
 

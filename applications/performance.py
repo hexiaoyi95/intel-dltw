@@ -44,6 +44,8 @@ def get_layers_perf(backend, config):
 
 
     for i in xrange(int(config.iteration)):
+         
+        logger.debug('processing {}th iteration forward-backward layer by layer'.format(i))
         _get_layers_perf(backend, 'forward', fwd_elapsed_ms_net_list, fwd_elapsed_ms_layers_list)
         _get_layers_perf(backend, 'backward', bwd_elapsed_ms_net_list, bwd_elapsed_ms_layers_list)
 
@@ -101,7 +103,7 @@ def convertToReport(res_dict, config, backend):
     net_time.append('backward: ')
     net_time.append('time: {:<9.4f} ms'.format(res_dict['net_backward_perf'][0]))
     net_time.append('reference time: {:<9.4f} ms'.format(ref_res_dict['net_backward_perf'][0]))
-    net_time.append('realative error:{:<6.2f}'.format(-100*(res_dict['net_backward_perf'][0] - ref_res_dict['net_backward_perf'][0])/ref_res_dict['net_backward_perf'][0]) + '%')
+    net_time.append('Gap: {:<6.2f}'.format(-100*(res_dict['net_backward_perf'][0] - ref_res_dict['net_backward_perf'][0])/ref_res_dict['net_backward_perf'][0]) + '%')
     aTXT.append(net_time)
     aTXT.append(['-']*80)
     layers_f_perf = dict(res_dict['layers_forward_perf'])

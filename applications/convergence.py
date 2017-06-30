@@ -37,25 +37,20 @@ def test_layer_accuracy(backend, config):
 
     check_result = list()
     result = cal4result(backend, config)
-    shutil.rmtree(config.out_dir)
+    if os.path.exists(config.out_dir):
+        shutil.rmtree(config.out_dir)
     for layer_name, l in result.iteritems():
         for j,[blob_name, np_list] in enumerate(l):
             for i, np_arry in enumerate(np_list):
                 if blob_name == 'params_diff':
-                    if i == 0:
-                        ctx = 'W_diff'
-                    else:
-                        ctx = 'b_diff'
+                    ctx = 'params_{}_diff'.format(i)
                 elif blob_name == 'params_data':
-                    if i == 0:
-                        ctx = 'W_data'
-                    else:
-                        ctx = 'b_data'
+                    ctx = 'params_{}_data'.format(i)
                 else:
                     if i == 0:
-                        ctx = 'blob_{}_data'.format(j)
+                        ctx = blob_name + '_data'
                     else:
-                        ctx = 'blob_{}_diff'.format(j)
+                        ctx = blob_name + '_diff'
 
                 np_name = os.path.join(config.out_dir, layer_name.replace('/','-'), blob_name + '_' + ctx)
                 np_name = os.path.expanduser(np_name)
@@ -67,7 +62,7 @@ def test_layer_accuracy(backend, config):
 
     if hasattr(config,'reference'):
         result_dir = os.path.expanduser(config.reference.result_dir)
-        this_batch_result = layer_accuracy_convergence(backend, result,config.out_dir, result_dir, config.precision)
+        this_batch_result = layer_accuracy_convergence(backend, result,config.out_dir, result_dir, config, config.precision)
         check_result.extend(this_batch_result)
 
 

@@ -261,12 +261,12 @@ def find_fail(data, data_ref, ctx, precision):
         raise Exception('compared arrys shape not match %d vs %d' %(data.size,data_ref.size))
     result.insert(0,['id','coordinate','test value','reference value'])
     if count == 0:
-        result.insert(1, [ctx, 'blob shape: ' + str(data.shape), 'total fail: >{:.4f}%'.format(100.0/data.size*100)])
+        result.insert(0, [ctx, 'blob shape: ' + str(data.shape), 'total fail: >100/{}'.format(data.size)])
     else:
-        result.insert(0,[ctx, 'blob shape: '+ str(data.shape) , 'total fail: {:.4f}%'.format(float(count)/data.size*100)])
+        result.insert(0,[ctx, 'blob shape: '+ str(data.shape) , 'total fail: {}/{}'.format(count,data.size)])
     return result
 
-def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision=1e-04 ):
+def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, precision=1e-04):
 
     this_batch_result = list()
     this_batch_result.append(['-']*40)
@@ -295,9 +295,9 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
                     ctx = 'params_{}_data'.format(i)
                 else:
                     if i == 0:
-                        ctx = 'blob_{}_data'.format(j)
+                        ctx = blob_name + '_data'
                     else:
-                        ctx = 'blob_{}_diff'.format(j)
+                        ctx = blob_name + '_diff'
                 try:
                     ref_data = np.load(os.path.join(ref_dir,layer_name.replace('/', '-'), blob_name + '_' + ctx + '.npy'))
                 except IOError:
@@ -364,7 +364,7 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, precision
     this_batch_result.insert(0,['weight update: ', update_accuracy])
     this_batch_result.insert(0,['net backward: ', bwd_accuracy])
     this_batch_result.insert(0,['net forward: ', fwd_accuracy])
-
+    this_batch_result.insert(0,['Test engine: {}, reference engine: {}'.format(config.backend.engine,config.reference.engine)]) 
     return this_batch_result
 
 
@@ -410,7 +410,7 @@ def layer_accuracy_debug(batch_num, img_names, test_result,ref_dir, precision=1e
                     logger.error("layer {} not found in refenence, skiping ...".format(layer_name))
                     continue;
 
-                isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
+                isequal = np.allclose(np_arry, ref_data,  rtol=1e-04, atol=precision, equal_nan = True)
 
                 if isequal:
                     this_arry = 'pass'
