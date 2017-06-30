@@ -18,16 +18,9 @@ class ChainerBackend():
 
         #print "Use Chainer as backend."
         #print chainer.__file__
-        if config.model.net == "googlenet":
-            sys.path.insert(1,os.path.expanduser(config.model.path))
-            googlenet = __import__("googlenet")
-            self.net = googlenet.GoogLeNet()
-        elif config.model.net == "ssd":
-            sys.path.insert(1,os.path.expanduser(config.model.path))
-            ssd = __import__("ssd_net")
-            self.net = ssd.SSD()
-        else:
-            raise Exception('Unsupported net type, choose googlenet or ssd')
+        sys.path.insert(1,os.path.expanduser(config.model.path))
+        net_module = __import__(config.model.net)
+        self.net = net_module.net()
 
         if hasattr(config.model, 'weight'):
             serializers.load_npz( os.path.expanduser(config.model.weight), self.net)
@@ -169,6 +162,55 @@ class ChainerBackend():
                 weights[key + "_params_" + x.name +"_diff"] = x.grad
 
         return datas, weights
+    
+    def get_layer_accuracy_output_debug(self, config):
+        result = orderedDict()
+        if self.output.creator is None:
+            return
+        cand_funcs = []
+        seen_set = set()
+        seen_vars = set()
+        func_num = 0
+        def add_cand(cand):
+            if cand not in seen_set:
+                heapq.heappush(cand_funcs,(-cand.rank, len(seen_set), cand))
+                seen_set.add(cand)
+
+        add_cand(self.output.creator)
+        inputs = {}
+        while cand_funcs:
+            _,_, func = heapq.heappop(cand_funcs)
+            func_num += 1
+            outputs = [y() for y in func.outputs]
+            num = len(datas)
+            func_name = str(type(func)).split('.')[3]
+            layer_result = list()
+            for i, y in enumerate(outputs):
+                seen_vars.add(id(y))
+                #datas['%04d' % (func_num) + "_" + func_name + "_" +str(i + 1)  + "_data"] = y.data
+                #datas['%04d' % (func_num) + "_" + func_name + "_" +str(i + 1)  + "_diff"] = y.grad
+                layer_result.append(["blob_{}".format(i),[y.data, y.grad]])
+            result[str(func_num) + "_" + func_name] = layer_result
+            inputs[str(func_num) + "_" + func_name] = list()
+            for i,x in enumerate(func.inputs):
+
+                inputs[str(func_num) + "_" + func_name].append(x) 
+
+                if x.creator is not None:
+                    add_cand(x.creator)
+
+        for key in inputs:
+            x_list = inputs[key]
+            params = list()
+            for x in x_list
+                if x.name is not None and id(x) not in seen_vars:
+                    #weights[key + "_params_" + x.name +"_diff"] = x.grad
+                    params.append(x)
+            result[key].append(['params_data', [item.data for item in params]])
+            result[key].append(['params_diff', [item.grad for item in params]])
+                
+        return result
+            
 
     def get_layers_perf(self,direction):
         """
@@ -197,7 +239,7 @@ class ChainerBackend():
             call.append([name,ms_time])
 
         return [call,total_time_seconds * 1000]
-
+    
 
 
     def infer(self):

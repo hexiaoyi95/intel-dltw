@@ -1,6 +1,6 @@
 {
     "backend" : {
-        "python_path" : "/home/xiaoyihe/chainer-intel/build/lib.linux-x86_64-2.7",
+        "python_path" : "/home/xiaoyihe/chainer-intel/build/lib.linux-x87_64-2.7",
         "class_path" : "backends.chainer_backend.ChainerBackend",
         "engine" : "default"
     },
