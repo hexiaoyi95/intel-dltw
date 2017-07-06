@@ -1,100 +1,162 @@
 #!/usr/bin/env python
 # encoding: utf-8
-import os, sys
+import sys
+import os
 import argparse
 import logging
 from logging.config import fileConfig
-import subprocess
-import pprint
+
 
 os.environ['GLOG_minloglevel'] = '1'
 WORKHOME = os.path.join(os.path.dirname(__file__), '..')
 sys.path.insert(1, WORKHOME)
-from utils.io import  json2dict, dict2json
+from utils import io
 
-DEFAULT_CONFIG = os.path.join(WORKHOME, 'test-config', 'templates', 'test-suite.json')
+DEFAULT_CONFIG = os.path.join(WORKHOME, 'test-config', 'templates', 'test-gen-cases.json')
 
 fileConfig(os.path.join(WORKHOME, 'logging_config.ini'))
 logger = logging.getLogger('root')
 
 def args_process():
     arg_parser = argparse.ArgumentParser(description='')
-    arg_parser.add_argument('--config', '-c', default=DEFAULT_CONFIG, help='config file for test suite')
+    arg_parser.add_argument('--config', '-c', default=DEFAULT_CONFIG, help='config file for gen cases')
     args = arg_parser.parse_args()
     return args
 
-def run_case(case_conf_path):
-    logger.debug('running for reference, ref-config: {}'.format(case_conf_path))
-    bin_path = os.path.join(WORKHOME, 'bin', 'run_case.py')
-    ret_code = subprocess.call([
-        bin_path,
-        "-c",
-        case_conf_path
-    ])
+def setup_logger():
+    fileConfig(os.path.join(WORKHOME, 'logging_config.ini'))
 
-def gen_case(suite_name, app_name, template, backend, model, batch_size):
-    unique_name = "{}-{}-{}".format(backend['name'], model['name'], batch_size)
-    tconf = template.copy()
-    tconf['backend'] = backend
-    tconf['batch_size'] = batch_size
-    tconf['model'] = model
-    tconf['out_dir'] = os.path.join('out', app_name, unique_name)
-    if 'reference' in tconf:
-        ref_unique_name = "{}-{}-{}.json".format(tconf['reference']['backend']['name'], model['name'], batch_size)
-        tconf['reference']['out_file'] = os.path.join('reference', app_name, ref_unique_name, 'accuracy.json')
+def genBackend( python_path, backend, engine):
+    if backend == 'caffe':
+        class_path = "backends.caffe_backend.CaffeBackend"
+    elif backend == 'chainer':
+        class_path = "backends.chainer_backend.ChainerBackend"
+    else:
+        raise Exception("unsupported backend, choose caffe or chainer")
+    
+    return {'python_path':python_path, 'class_path': class_path, 'engine': engine}
 
-        #save reference as a case and run the reference case
-        ref_tconf = tconf.copy()
-        del ref_tconf['reference']
-        ref_tconf['backend'] = tconf['reference']['backend']
-        ref_tconf['out_dir'] = os.path.dirname(tconf['reference']['out_file'])
-        ref_case_conf_path = os.path.join(
-            WORKHOME,
-            "test-config",
-            suite_name,
-            app_name,
-            "ref",
-            ref_unique_name
-        )
-        dict2json(ref_tconf, ref_case_conf_path)
-        run_case(ref_case_conf_path)
+def genModel(topology_name, prototxt_type, weight):
+    
+    if prototxt_type == 'train_val':
+        prototxt_name = 'img_train_val.prototxt'
+        caffe_type = 'train'
+    elif prototxt_type == 'deploy':
+        prototxt_name = 'deploy.prototxt'
+        caffe_type = 'test'
+    elif prototxt_type == 'solver':
+        prototxt_name = 'solver.prototxt'
+        caffe_type = None
+    else:
+        raise Exception("unsupported prototxt type, choose train_val, deploy or solver")
+    
+    result= {'topology': os.path.join('dl-models',topology_name, prototxt_name),
+            'prototxt_type': prototxt_type,
+            }
+    
+    if weight == 'default':
+        weight_path = os.path.join('dl-models', topology_name, topology_name + '.caffemodel')
+    else:
+        weight_path = weight
+    
+    if weight_path != None:
+        result['weight'] = weight_path
+    
+    if caffe_type != None:
+        result['type'] =  caffe_type
 
-        #check reference generated
-        if not os.path.exists(tconf['reference']['out_file']):
-            logger.error("reference not generated: {}".format(tconf['reference']['out_file']))
-            sys.exit(1)
+    return result        
+    
 
-    # save test cases configuration
-    case_conf_path = os.path.join(
-        WORKHOME,
-        "test-config",
-        suite_name,
-        app_name,
-        unique_name
-    )
-
-    logger.debug(pprint.pformat(tconf))
-    dict2json(tconf, case_conf_path)
-
-
+def genJson(json_name,
+             topology,
+             python_path,
+             backend,
+             engine,
+             prototxt_type,
+             out_dir,
+             application,
+             iteration,
+             batch_size,
+             reference_dir = None,
+             forward_only = False,
+             weight = None,
+             precision = None,
+             reportOrder = None):
+    _backend = genBackend( python_path, backend, engine)
+    _model = genModel( topology, prototxt_type, weight)
+    
+    result = dict()
+    if reference_dir != None:
+        result['reference'] = {'result_dir' : reference_dir}
+    result['backend'] = _backend
+    result['model'] = _model
+    result['application'] = "applications." + application
+    result['forward_only'] = forward_only
+    result['iteration'] = int(iteration)
+    result['out_dir'] = out_dir
+    result['batch_size'] = int(batch_size)
+    if precision != None:
+        result['precision'] = precision
+    if reportOrder != None:
+        result['getReport'] = {'reportOrder': reportOrder} 
+    print json_name
+    io.dict2json( result, json_name)
 
 def main():
-    args = args_process()
-    suite_config = json2dict(args.config)
-    logger.debug(pprint.pformat(suite_config))
-    for template_path in suite_config['app_templates']:
-        logger.debug("gen cases from template: {}".format(template_path))
-        template = json2dict(template_path)
-        short_app_name = os.path.basename(template_path)
-        short_app_name = os.path.splitext(short_app_name)[0]
+   
+   args = args_process()
 
-        logger.debug(pprint.pformat(template))
-        for model in suite_config['models']:
-            for backend in suite_config['backends']:
-                for batch_size in suite_config['batch_sizes']:
-                    logger.debug("saving case config to {}".format(os.path.join('test-config',suite_config['name'], short_app_name)))
-                    gen_case(suite_config['name'], short_app_name, template, backend, model, batch_size)
+   setup_logger()
+   
+   result = io.genConfFilename(args.config,getJson_only = False)
+   
+   for [jsonPath, changed_template] in result:
+       #print jsonPath
+       genJson(jsonPath, **changed_template) 
+        
+   #confDict = io.json2dict(sys.argv[1])
+   # [ref_conf, ref_confValue, app, confPermutations ] = io.genConfFilename(sys.argv[1])
+   # template = io.json2dict('test-config/' + app + '-template.json')
+   # for confList in confPermutations:
+   #     #print ref_conf,ref_confValue, confList
+   #     ref_dir = app
+   #     out_dir = app 
+   #     is_ref = False
+   #     for [confName, value] in confList:
+   #         template[confName] = value
+   #         out_dir += '_' + value
+   #         if confName == ref_conf:
+   #             ref_dir += '_' + ref_confValue
+   #             if ref_conf == value:
+   #                 is_ref = True
+   #         else: 
+   #             ref_dir += '_' + value
+   #     if !is_ref:
+   #         template['reference_dir'] = 'out/' + ref_dir
+   #     template['out_dir'] = 'out/' + out_dir
+   #     jsonPath = 'test-config/' + out_dir + '.json'
+   #     genJson( jsonPath, **template)
+   #     
 
+   # app = confDict['application']
+   # with open('run_case.sh','w') as fp:
+   #     fp.write('#!/bin/bash\n')
+   #     template = io.t( 'test-config/' + app + '-template.json')
+   #     for item, argDict in confDict.iteritems():
+   #         if item != 'application':
+   #             reference_dir = ''
+   #             for i, arg in argDict.iteritems():
+   #                 template[item] = arg
+   #                 if i == 'ref':
+   #                     reference_dir = 'out/' + item +'/ref'
+   #                     template['out_dir'] = reference_dir
+   #                     template['reference_dir'] = reference_dir
+   #                 else:
+   #                     template['out_dir'] = 'out/' + item + '/' + arg
+   #                     template['reference_dir'] = reference_dir
+   #                 genJson('test-config/' + app + '_' +  item + '_' + arg + '.json', **template)
+   #                 fp.write('./bin/run_cafe -c ' + 'test-config/' + app + '_' +  item + '_' + arg + '.json\n')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

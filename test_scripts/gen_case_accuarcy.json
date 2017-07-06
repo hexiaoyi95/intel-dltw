@@ -1,0 +1,23 @@
+{
+    "application" : "accuracy",
+    "ref" : "engine",
+    "engine" : {
+	"test_1": "MKLDNN",
+	"test_2": "MKL2017",
+	"ref" : "default"
+    },
+    "topology" : {
+	"test_1" : "bvlc_alxnet",
+	"test_2" : "bvlc_googlenet",
+	"test_3" : "googlenet_v2",
+	"test_4" : "vgg_19",
+	"test_5" : "resnet_50"
+    },
+    "batch_size" : {
+	"test_1" : "1",
+	"test_3" : "16",
+	"test_5" : "256"
+    }
+}
+
+

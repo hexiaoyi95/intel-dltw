@@ -185,7 +185,7 @@ def run(config):
             'net_forward_perf'    : net_forward_perf,
             'net_backward_perf'   : net_backward_perf
     }
-    if hasattr(config, 'getReport'):
+    if hasattr(config, 'getReport') and hasattr(config, 'reference'):
         logger.debug('gen report')
         convertToReport(res_dict, config, backend)
 

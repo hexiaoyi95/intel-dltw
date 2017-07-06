@@ -7,10 +7,10 @@
     "application" : "applications.image_classification.infer",
     "test_type" : "accuracy",
     "model" : {
-        "topology" : "dl-models/googlenet_v1/deploy.prototxt" ,
-        "weight" : "dl-models/googlenet_v1/googlenet_v1.caffemodel"
+        "topology" : "dl-models/googlenet_v2/deploy.prototxt" ,
+        "weight" : "dl-models/googlenet_v2/googlenet_v2.caffemodel"
     },
-    "input_path" : "dl-data/ilsvrc12_val",
+    "input_path" : "dl-data/ilsvrc12/test224.txt",
     "mean_value" : [104,117,123],
     "batch_size" : 4,
     "iteration" : 4,
