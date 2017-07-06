@@ -163,8 +163,8 @@ def genConfFilename(json_path, getJson_only= True):
                 else: 
                     ref_dir += '_' + value
             if not is_ref:
-                template['reference_dir'] = 'out/' + ref_dir
-            fp.write(out_dir)
+                template['reference_dir'] = 'out/' + ref_dir 
+            fp.write(out_dir + '/test_report.txt')
             fp.write('\n')
             template['out_dir'] = 'out/' + out_dir
             jsonPath = 'test-config-debug/' + out_dir + '.json'
