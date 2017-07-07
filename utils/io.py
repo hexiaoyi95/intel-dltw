@@ -133,8 +133,11 @@ def genConfFilename(json_path, getJson_only= True):
     for item, argDict in confDict.iteritems():
         if item != 'application' and item != 'ref' and item !=ref :
             l = list()
-            for i, arg in argDict.iteritems():
-                l.append([item,arg])
+            if type(argDict) != type(dict()):
+                l.append([item,argDict])
+            else:
+                for i, arg in argDict.iteritems():
+                    l.append([item,arg])
             iter_list.append(l)
     
     title_generated = False
@@ -154,14 +157,14 @@ def genConfFilename(json_path, getJson_only= True):
                 title_generated = True
             for [confName, value] in confList:
                 template[confName] = value
-                out_dir += '_' + value
-                fp.write(value + '\t')
+                out_dir += '_' + str(value)
+                fp.write(str(value) + '\t')
                 if confName == ref:
-                    ref_dir += '_' + ref_confValue
+                    ref_dir += '_' + str(ref_confValue)
                     if ref_confValue == value:
                         is_ref = True
                 else: 
-                    ref_dir += '_' + value
+                    ref_dir += '_' + str(value)
             if not is_ref:
                 template['reference_dir'] = 'out/' + ref_dir 
             fp.write(out_dir + '/test_report.txt')

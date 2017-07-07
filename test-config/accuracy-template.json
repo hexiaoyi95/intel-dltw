@@ -8,5 +8,8 @@
 "prototxt_type" : "train_val",
 "forward_only" : false,
 "iteration" : 1,
-"precision" : 0.001
+"precision" : 0.001,
+"weight" : "default",
+"input_path" : null,
+"mean_value" : null
 }

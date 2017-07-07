@@ -81,14 +81,15 @@ def genJson(json_name,
              reference_dir = None,
              forward_only = False,
              weight = None,
+             mean_value = None,
+             input_path = None,
+             test_type = None,
              precision = None,
              reportOrder = None):
     _backend = genBackend( python_path, backend, engine)
     _model = genModel( topology, prototxt_type, weight)
     
     result = dict()
-    if reference_dir != None:
-        result['reference'] = {'result_dir' : reference_dir}
     result['backend'] = _backend
     result['model'] = _model
     result['application'] = "applications." + application
@@ -96,6 +97,13 @@ def genJson(json_name,
     result['iteration'] = int(iteration)
     result['out_dir'] = out_dir
     result['batch_size'] = int(batch_size)
+    result['test_type'] = test_type
+    if input_path != None:
+        result['input_path'] = input_path
+    if mean_value != None:
+        result['mean_value'] = mean_value
+    if reference_dir != None:
+        result['reference'] = {'result_dir' : reference_dir}
     if precision != None:
         result['precision'] = precision
     if reportOrder != None:
