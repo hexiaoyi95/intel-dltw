@@ -42,7 +42,6 @@ def get_layers_perf(backend, config):
     fwd_elapsed_ms_layers_list = [[] for l in xrange(len(backend.layers(direction="forward")))]
     bwd_elapsed_ms_net_list = []
     bwd_elapsed_ms_layers_list = [[] for l in xrange(len(backend.layers(direction="backward")))]
-    print len(bwd_elapsed_ms_layers_list)
 
     for i in xrange(int(config.iteration)):
          

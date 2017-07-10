@@ -157,14 +157,14 @@ def genConfFilename(json_path, getJson_only= True):
                 title_generated = True
             for [confName, value] in confList:
                 template[confName] = value
-                out_dir += '_' + str(value)
+                out_dir += '_' + str(value).replace('/','-')
                 fp.write(str(value) + '\t')
                 if confName == ref:
-                    ref_dir += '_' + str(ref_confValue)
+                    ref_dir += '_' + str(ref_confValue).replace('/','-')
                     if ref_confValue == value:
                         is_ref = True
                 else: 
-                    ref_dir += '_' + str(value)
+                    ref_dir += '_' + str(value).replace('/','-')
             if not is_ref:
                 template['reference_dir'] = 'out/' + ref_dir 
             fp.write(out_dir + '/test_report.txt')

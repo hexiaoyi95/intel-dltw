@@ -304,8 +304,11 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                     logger.warn("blob {} not found in refenence, skiping ...".format(blob_name))
                     this_layer_result.append(['can not find {} in reference,skiped'.format(ctx)])
                     continue
-                isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
-
+                try:
+                    isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
+                except TypeError:
+                    logger.warn("blob{} is none type".format(blob_name))
+                    continue
                 if isequal:
                     this_arry = 'pass'
                     blob_title.append(ctx + ': ' + this_arry)

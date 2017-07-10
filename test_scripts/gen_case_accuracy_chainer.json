@@ -1,0 +1,19 @@
+{
+    "application" : "accuracy",
+    "ref" : "python_path",
+    "python_path" : {
+	"test" : "chainer",
+	"ref" : "intel-chainer"
+    },
+    "backend" : "chainer",
+    "forward_only" : true,
+    "input_path" : "dl-data/ilsvrc12/test224.txt",
+    "mean_value" : [104,117,123],
+    "topology" : "bvlc_alexnet",
+    "batch_size" : {
+	"test_1" : 1,
+	"test_3" : 4
+    }
+}
+
+

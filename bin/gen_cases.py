@@ -36,34 +36,43 @@ def genBackend( python_path, backend, engine):
     
     return {'python_path':python_path, 'class_path': class_path, 'engine': engine}
 
-def genModel(topology_name, prototxt_type, weight):
+def genModel(topology_name, prototxt_type, weight, backend):
+    result = dict() 
+    if backend == 'caffe':
+        if prototxt_type == 'train_val':
+            prototxt_name = 'img_train_val.prototxt'
+            caffe_type = 'train'
+        elif prototxt_type == 'deploy':
+            prototxt_name = 'deploy.prototxt'
+            caffe_type = 'test'
+        elif prototxt_type == 'solver':
+            prototxt_name = 'solver.prototxt'
+            caffe_type = None
+        else:
+            raise Exception("unsupported prototxt type, choose train_val, deploy or solver")
+        if caffe_type != None:
+            result['type'] =  caffe_type
+    elif backend == 'chainer':
+        prototxt_name = topology_name + '.py'
+        prototxt_type = 'chainer_py'
+
     
-    if prototxt_type == 'train_val':
-        prototxt_name = 'img_train_val.prototxt'
-        caffe_type = 'train'
-    elif prototxt_type == 'deploy':
-        prototxt_name = 'deploy.prototxt'
-        caffe_type = 'test'
-    elif prototxt_type == 'solver':
-        prototxt_name = 'solver.prototxt'
-        caffe_type = None
-    else:
-        raise Exception("unsupported prototxt type, choose train_val, deploy or solver")
-    
-    result= {'topology': os.path.join('dl-models',topology_name, prototxt_name),
-            'prototxt_type': prototxt_type,
-            }
+    result['topology'] = os.path.join('dl-models',topology_name, prototxt_name)
+    result['prototxt_type'] = prototxt_type
+            
     
     if weight == 'default':
-        weight_path = os.path.join('dl-models', topology_name, topology_name + '.caffemodel')
+        if backend == 'caffe':
+            weight_path = os.path.join('dl-models', topology_name, topology_name + '.caffemodel')
+        elif backend == 'chainer':
+            weight_path = os.path.join('dl-models', topology_name, topology_name + '.chainermodel')
+            
     else:
         weight_path = weight
     
     if weight_path != None:
         result['weight'] = weight_path
     
-    if caffe_type != None:
-        result['type'] =  caffe_type
 
     return result        
     
@@ -87,7 +96,7 @@ def genJson(json_name,
              precision = None,
              reportOrder = None):
     _backend = genBackend( python_path, backend, engine)
-    _model = genModel( topology, prototxt_type, weight)
+    _model = genModel( topology, prototxt_type, weight, backend)
     
     result = dict()
     result['backend'] = _backend

@@ -13,18 +13,20 @@ logger = logging.getLogger('root')
 import sys
 import bbox
 import ssd
+import pprint
 from collections import OrderedDict
 class ChainerBackend():
     def __init__(self, config):
 
         #print "Use Chainer as backend."
         #print chainer.__file__
-        sys.path.insert(1,os.path.expanduser(config.model.path))
-        net_module = __import__(config.model.net)
+        sys.path.insert(1,os.path.expanduser(os.path.dirname(config.model.topology)))
+        net_py = os.path.basename(config.model.topology)
+        net_module = __import__(os.path.splitext(net_py)[0])
         self.net = net_module.net()
 
         if hasattr(config.model, 'weight'):
-            serializers.load_npz( os.path.expanduser(config.model.weight), self.net)
+            serializers.load_hdf5( os.path.expanduser(config.model.weight), self.net)
             logger.debug("Loaded weight")
 
         self.config = config
@@ -212,10 +214,13 @@ class ChainerBackend():
             if len(params) > 0 and config.forward_only == False:
                 #result[key].append(['params_data', [item.data for item in params]])
                 result[key].append(['params_diff', [item.grad for item in params]])
-        #print result['114_convolution_2d'][0][1]        
+                for item in params:
+                    print item.grad
         reversed_result = OrderedDict()
+        
         for i in sorted(result.keys(), key = lambda t:t.split('_')[0], reverse=True):
             reversed_result[i] = result[i]
+        
         return reversed_result
             
 
@@ -260,8 +265,10 @@ class ChainerBackend():
             call_his = m.call_history
         layers = list()
         for i in call_his:
-            layers.append(i[1])
+            layers.append(str(type(i[0])))
+        #pprint.pprint( layers )
         return layers
+    
     def get_layer_name(self, layer_id):
         return "To do"
 

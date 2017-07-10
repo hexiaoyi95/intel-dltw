@@ -1,0 +1,16 @@
+{
+    "application" : "performance",
+    "ref" : "python_path",
+    "backend" : "chainer",
+    "python_path" : {
+	"test_1": "dl-frameworks/chainer-intel",
+	"ref" : "dl-frameworks/chainer"
+    },
+    "topology" : "bvlc_alexnet",
+    "batch_size" : {
+	"test_1" : 1,
+	"test_2" : 4
+     }
+}
+
+

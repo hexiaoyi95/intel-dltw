@@ -7,7 +7,7 @@
 	"ref" : "default"
     },
     "topology" : {
-	"test_1" : "bvlc_alxnet",
+	"test_1" : "bvlc_alexnet",
 	"test_2" : "bvlc_googlenet",
 	"test_3" : "googlenet_v2",
 	"test_4" : "vgg_19",
