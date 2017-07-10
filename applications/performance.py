@@ -15,6 +15,7 @@ def _get_layers_perf(backend, direction, elapsed_ms_net_list, elapsed_ms_layers_
     for layer_perf in layers_time:
         layer_id = layer_perf[0]
         layer_time = layer_perf[1]
+        #print layer_id
         elapsed_ms_layers_list[layer_id].append(layer_time)
 
 def layers_perf_post_process(config, backend, elapsed_ms_layers_list, elapsed_ms_net_list):
@@ -38,10 +39,10 @@ def get_layers_perf(backend, config):
         per layer forward and backward time: [(layer name, layer type, elapsed_time, FPS), ... ]
     """
     fwd_elapsed_ms_net_list = []
-    fwd_elapsed_ms_layers_list = [[] for l in xrange(len(backend.layers()))]
+    fwd_elapsed_ms_layers_list = [[] for l in xrange(len(backend.layers(direction="forward")))]
     bwd_elapsed_ms_net_list = []
-    bwd_elapsed_ms_layers_list = [[] for l in xrange(len(backend.layers()))]
-
+    bwd_elapsed_ms_layers_list = [[] for l in xrange(len(backend.layers(direction="backward")))]
+    print len(bwd_elapsed_ms_layers_list)
 
     for i in xrange(int(config.iteration)):
          
@@ -114,17 +115,19 @@ def convertToReport(res_dict, config, backend):
     fwd_perf_perctg = dict()
     bwd_perf_perctg = dict()
     for key in layers_f_perf.iterkeys():
-	if key != 'summary':
- 	    fwd_perf_perctg[key] = -100*(layers_f_perf[key] - ref_f_perf[key])/ref_f_perf[key]
-	    bwd_perf_perctg[key] = -100*(layers_b_perf[key] - ref_b_perf[key])/ref_b_perf[key]
+        if key != 'summary':
+            fwd_perf_perctg[key] = -100*(layers_f_perf[key] - ref_f_perf[key])/ref_f_perf[key]
+    for key in layers_b_perf.iterkeys():
+        if key != 'summary':
+            bwd_perf_perctg[key] = -100*(layers_b_perf[key] - ref_b_perf[key])/ref_b_perf[key]
     if config.getReport.reportOrder == 'default':
     	orderedKey = sorted(layers_f_perf.iterkeys(), key = lambda item:item)
     elif config.getReport.reportOrder == 'forward performance':
-	orderedKey = sorted(fwd_perf_perctg.iterkeys(), key = lambda item:fwd_perf_perctg[item])
+	    orderedKey = sorted(fwd_perf_perctg.iterkeys(), key = lambda item:fwd_perf_perctg[item])
     elif config.getReport.reportOrder == 'backward performance':
-	orderedKey = sorted(bwd_perf_perctg.iterkeys(), key = lambda item:bwd_perf_perctg[item])
+	    orderedKey = sorted(bwd_perf_perctg.iterkeys(), key = lambda item:bwd_perf_perctg[item])
     else:
-	raise Exception('Unsupported reprort order,choose default,forward performance or backward performance')
+	    raise Exception('Unsupported reprort order,choose default,forward performance or backward performance')
     layer_id = -1
     aTXT.append('layer by layer performance')
     aTXT.append(['-']*80)

@@ -13,6 +13,7 @@ logger = logging.getLogger('root')
 import sys
 import bbox
 import ssd
+from collections import OrderedDict
 class ChainerBackend():
     def __init__(self, config):
 
@@ -26,7 +27,7 @@ class ChainerBackend():
             serializers.load_npz( os.path.expanduser(config.model.weight), self.net)
             logger.debug("Loaded weight")
 
-
+        self.config = config
     def shuffle_inputs(self):
 
         utils.benchmark.shuffle_inputs(self.inputs)
@@ -164,13 +165,13 @@ class ChainerBackend():
         return datas, weights
     
     def get_layer_accuracy_output_debug(self, config):
-        result = orderedDict()
+        result = OrderedDict()
         if self.output.creator is None:
             return
         cand_funcs = []
         seen_set = set()
         seen_vars = set()
-        func_num = 0
+        func_num = -1
         def add_cand(cand):
             if cand not in seen_set:
                 heapq.heappush(cand_funcs,(-cand.rank, len(seen_set), cand))
@@ -182,19 +183,21 @@ class ChainerBackend():
             _,_, func = heapq.heappop(cand_funcs)
             func_num += 1
             outputs = [y() for y in func.outputs]
-            num = len(datas)
             func_name = str(type(func)).split('.')[3]
             layer_result = list()
             for i, y in enumerate(outputs):
                 seen_vars.add(id(y))
                 #datas['%04d' % (func_num) + "_" + func_name + "_" +str(i + 1)  + "_data"] = y.data
                 #datas['%04d' % (func_num) + "_" + func_name + "_" +str(i + 1)  + "_diff"] = y.grad
-                layer_result.append(["blob_{}".format(i),[y.data, y.grad]])
-            result[str(func_num) + "_" + func_name] = layer_result
-            inputs[str(func_num) + "_" + func_name] = list()
+                if config.forward_only == False:
+                    layer_result.append(["blob_{}".format(i),[y.data, y.grad]])
+                else: 
+                    layer_result.append(["blob_{}".format(i),[y.data]])
+            result[ '%04d' % (func_num) + "_" + func_name] = layer_result
+            inputs[ '%04d' % (func_num) + "_" + func_name] = list()
             for i,x in enumerate(func.inputs):
 
-                inputs[str(func_num) + "_" + func_name].append(x) 
+                inputs[ '%04d' % (func_num) + "_" + func_name].append(x) 
 
                 if x.creator is not None:
                     add_cand(x.creator)
@@ -202,14 +205,18 @@ class ChainerBackend():
         for key in inputs:
             x_list = inputs[key]
             params = list()
-            for x in x_list
+            for x in x_list:
                 if x.name is not None and id(x) not in seen_vars:
                     #weights[key + "_params_" + x.name +"_diff"] = x.grad
                     params.append(x)
-            result[key].append(['params_data', [item.data for item in params]])
-            result[key].append(['params_diff', [item.grad for item in params]])
-                
-        return result
+            if len(params) > 0 and config.forward_only == False:
+                #result[key].append(['params_data', [item.data for item in params]])
+                result[key].append(['params_diff', [item.grad for item in params]])
+        #print result['114_convolution_2d'][0][1]        
+        reversed_result = OrderedDict()
+        for i in sorted(result.keys(), key = lambda t:t.split('_')[0], reverse=True):
+            reversed_result[i] = result[i]
+        return reversed_result
             
 
     def get_layers_perf(self,direction):
@@ -230,17 +237,33 @@ class ChainerBackend():
                 self.backward()
             call_his = m.call_history
             total_time_seconds = m.total_time()
-
         call = []
         for i,l in enumerate(call_his):
             func_type = type(l[0])
-            name = str(func_type).split(".")[3]
+            #name = str(func_type).split(".")[3]
+            name = i
+            if direction == "backward":
+                name = len(call_his) - i -1
             ms_time = l[1]* 1000
             call.append([name,ms_time])
 
         return [call,total_time_seconds * 1000]
     
+    def layers(self,direction):
 
+        with chainer.function_hooks.TimerHook() as m:
+            self.prepare_benchmark(self.config) 
+            if direction == "forward":
+                self.forward()
+            elif direction == "backward":
+                self.backward()
+            call_his = m.call_history
+        layers = list()
+        for i in call_his:
+            layers.append(i[1])
+        return layers
+    def get_layer_name(self, layer_id):
+        return "To do"
 
     def infer(self):
 
@@ -260,7 +283,9 @@ class ChainerBackend():
         self.output.grad = np.ones_like(self.output.data)
         self.output.backward(retain_grad = True)
 
-
+    def get_layer_type(self,count):
+        
+        return "To do"
 
 
 
