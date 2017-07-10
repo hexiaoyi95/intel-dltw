@@ -22,6 +22,7 @@ def test_inference_performance(backend, config):
 
     utils.benchmark.performance_analysis(elpased_ms_list)
 
+
 def infer4result(backend, batch, config):
     backend.prepare_classify(batch, config)
     backend.infer()
@@ -29,9 +30,9 @@ def infer4result(backend, batch, config):
     return output
 
 def test_inference_accuracy(backend, config):
-    logging.debug("testing performance for image classification")
+    logging.debug("testing accuracy for image classification")
 
-    input_list = utils.io.get_input_list(config.input_path, config.batch_size)
+    input_list = utils.io.get_input_from_txt(config.input_path, config.batch_size)
     batches = utils.io.slice2batches(input_list,config.batch_size)
     outputs = {}
     for batch in batches:
@@ -40,13 +41,10 @@ def test_inference_accuracy(backend, config):
 
     out_file = os.path.join(config.out_dir, 'accuracy.json')
     utils.io.dict2json(outputs, out_file)
-
-    if hasattr(config, 'reference'):
-        if not os.path.exists(config.reference.out_file):
-            logger.info('reference not found: {}'.format(config.reference.out_file))
-            return
-        res = check_classify_result(out_file, config.reference.out_file)
-        logger.debug(pprint.pformat(res))
+    
+    if hasattr(config,'reference'):
+        res = check_classify_result(os.path.join(config.out_dir,'accuracy.json'),os.path.join(config.reference.result_dir, 'accuracy.json'))
+        pprint.pprint(res)
         res_check_file = os.path.join(config.out_dir, 'check.json')
         utils.io.dict2json(res, res_check_file)
 

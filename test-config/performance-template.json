@@ -1,0 +1,14 @@
+{
+"application" : "performance",
+"python_path" : "dl-frameworks/dl_framework-intel_caffe/python",
+"backend" : "caffe",
+"engine" : "default",
+"topology": "bvlc_axlenet",
+"prototxt_type" : "train_val",
+"batch_size" : 1,
+"iteration" : 5,
+"reportOrder" : "default",
+"weight" : null,
+"input_path" : null,
+"mean_value" : null,
+}

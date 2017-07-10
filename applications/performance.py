@@ -92,7 +92,7 @@ def convertToReport(res_dict, config, backend):
     ref_res_dict = json2dict(os.path.join(config.reference.result_dir, 'perf_data.json'))
     aTXT = list()
     net_time = list()
-    aTXT.append("Test engine: {}, reference engine: {}".format(config.backend.engine,config.reference.engine))
+    #aTXT.append("Test engine: {}, reference engine: {}".format(config.backend.engine,config.reference.engine))
     aTXT.append(['-']*80)
     aTXT.append('net performance: ')
     net_time.append('forward: ')
@@ -153,8 +153,9 @@ def convertToReport(res_dict, config, backend):
             layer_time.append('Gap: {:<6.2f}'.format( bwd_perf_perctg[key] )+ '%')
             aTXT.append(layer_time)
             aTXT.append(['-']*80)
-
-    with open(os.path.join(config.out_dir, 'performance_cmp_report.txt'),'w') as fp:
+    if not os.path.exists(config.out_dir):
+        os.mkdir(config.out_dir)
+    with open(os.path.join(config.out_dir,'test_report.txt'), 'w' ) as fp:
         for line in aTXT:
             if type(line) == type([]):
                 for word in line:
@@ -168,6 +169,7 @@ def convertToReport(res_dict, config, backend):
             fp.write('\n')
         fp.write('\n')
         fp.write('\n')
+
 def run(config):
     """
     return:
@@ -188,7 +190,7 @@ def run(config):
             'net_forward_perf'    : net_forward_perf,
             'net_backward_perf'   : net_backward_perf
     }
-    if hasattr(config, 'getReport'):
+    if hasattr(config, 'getReport') and hasattr(config, 'reference'):
         logger.debug('gen report')
         convertToReport(res_dict, config, backend)
 

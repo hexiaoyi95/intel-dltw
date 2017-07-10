@@ -4,10 +4,10 @@
         "class_path" : "backends.caffe_backend.CaffeBackend",
         "engine" : "default"
     },
-    "application" : "applications.obj_detection.infer",
+    "application" : "applications.object_detection.infer",
         "engine" : "default"
     },
-    "application" : "applications.obj_detection.infer",
+    "application" : "applications.object_detection.infer",
     "test_type" : "accuracy",
     "model" : {
         "topology" : "dl-models/caffe/ssd/deploy.prototxt" ,

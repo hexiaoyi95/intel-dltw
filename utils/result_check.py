@@ -318,10 +318,10 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                     this_layer_result.extend(datail_diff[:11])
                     detailTXT.extend(datail_diff)
 
-                    if layer_name == last_layer_name and ctx == 'data':
+                    if layer_name == last_layer_name and ctx == blob_name +'_data':
                         fwd_accuracy = 'fail'
 
-                    if (blob_name == 'params_diff' or ctx == 'diff')and first_param:
+                    if (blob_name == 'params_diff' or ctx == blob_name + '_diff') and first_param:
                         bwd_accuracy = 'fail'
                         first_param = False
 
@@ -363,7 +363,7 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
     this_batch_result.insert(0,['weight update: ', update_accuracy])
     this_batch_result.insert(0,['net backward: ', bwd_accuracy])
     this_batch_result.insert(0,['net forward: ', fwd_accuracy])
-    this_batch_result.insert(0,['Test engine: {}, reference engine: {}'.format(config.backend.engine,config.reference.engine)]) 
+    #this_batch_result.insert(0,['Test engine: {}, reference engine: {}'.format(config.backend.engine,config.reference.engine)]) 
     return this_batch_result
 
 

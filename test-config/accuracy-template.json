@@ -1,0 +1,15 @@
+{
+"python_path" : "dl-frameworks/dl_framework-intel_caffe/python",
+"backend" : "caffe",
+"engine" : "default",
+"application" : "convergence",
+"weight" : "default",
+"topology" : "bvlc_alexnet" ,
+"prototxt_type" : "train_val",
+"forward_only" : false,
+"iteration" : 1,
+"precision" : 0.001,
+"weight" : "default",
+"input_path" : null,
+"mean_value" : null
+}

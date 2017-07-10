@@ -6,6 +6,8 @@ import glob
 import numpy as np
 import skimage.io
 import json
+import itertools
+import copy
 logger = logging.getLogger()
 def get_input_list(input_path, img_num = None):
     """
@@ -110,3 +112,68 @@ def dict2json(d, json_path):
         os.makedirs(os.path.dirname(json_path))
     with open(json_path, 'w') as fp:
         json.dump(d, fp, indent=4)
+
+def genConfFilename(json_path, getJson_only= True):
+    
+    confDict =json2dict(json_path)
+    app = confDict['application']
+    ref = confDict['ref']
+    ref_confList = confDict[ref]
+    ref_confValue = ref_confList['ref']
+    template_init = json2dict( 'test-config/' + app + '-template.json')
+    iter_list = list()
+    ref_list = list()
+    for i, arg in confDict[ref].iteritems():
+        if i != 'ref':
+            ref_list.append([ref, arg])
+        else: 
+            ref_list.insert(0,[ref, arg])
+    iter_list.append(ref_list)
+
+    for item, argDict in confDict.iteritems():
+        if item != 'application' and item != 'ref' and item !=ref :
+            l = list()
+            if type(argDict) != type(dict()):
+                l.append([item,argDict])
+            else:
+                for i, arg in argDict.iteritems():
+                    l.append([item,arg])
+            iter_list.append(l)
+    
+    title_generated = False
+    result_list = list()
+    with open('result.txt','w') as fp:
+        for confList in itertools.product(*iter_list):
+            #print ref_conf,ref_confValue, confList
+            ref_dir = app
+            out_dir = app 
+            is_ref = False
+            template = copy.deepcopy(template_init)
+            if not title_generated:
+                for [confName,_] in confList:
+                    fp.write(confName + '\t')
+                fp.write('report')
+                fp.write('\n')
+                title_generated = True
+            for [confName, value] in confList:
+                template[confName] = value
+                out_dir += '_' + str(value)
+                fp.write(str(value) + '\t')
+                if confName == ref:
+                    ref_dir += '_' + str(ref_confValue)
+                    if ref_confValue == value:
+                        is_ref = True
+                else: 
+                    ref_dir += '_' + str(value)
+            if not is_ref:
+                template['reference_dir'] = 'out/' + ref_dir 
+            fp.write(out_dir + '/test_report.txt')
+            fp.write('\n')
+            template['out_dir'] = 'out/' + out_dir
+            jsonPath = 'test-config-debug/' + out_dir + '.json'
+            if getJson_only:
+                result_list.append(jsonPath)
+            else:
+                result_list.append( [jsonPath, template])
+    return result_list
+        
