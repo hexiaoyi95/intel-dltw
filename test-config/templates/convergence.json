@@ -6,8 +6,8 @@
     },
     "application" : "applications.convergence",
     "model" : {
-        "topology" : "dl-models/googlenet_v2/deploy.prototxt" ,
-	"weight" : "dl-models/googlenet_v2/googlenet_v2.caffemodel",
+        "topology" : "dl-models/bvlc_alexnet/deploy.prototxt" ,
+	"weight" : "dl-models/bvlc_alexnet/bvlc_alexnet.caffemodel",
         "prototxt_type" : "deploy",
 	"type" : "test"
     },

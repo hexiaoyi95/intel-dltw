@@ -7,15 +7,16 @@
     "application" : "applications.object_detection.infer",
     "test_type" : "accuracy",
     "model" : {
-        "topology" : "dl-models/caffe/ssd/deploy.prototxt" ,
-        "weight" : "dl-models/caffe/ssd/VGG_VOC0712_SSD_300x300_iter_120000.caffemodel"
+        "topology" : "dl-models/ssd/deploy.prototxt" ,
+	"prototxt_type" : "deploy",
+	"type" : "test",
+        "weight" : "dl-models/ssd/VGG_VOC0712_SSD_300x300_iter_120000.caffemodel"
     },
-    "input_path" : "dl-data//test.txt",
+    "input_path" : "dl-data/ilsvrc12/test224.txt",
     "mean_value" : [104,117,123],
     "batch_size" : 4,
     "iteration" : 1,
-    "is_ref": true,
-    "out_dir" : "~/workspace/dltw/out/ref"
+    "out_dir" : "out/obj_detection/ref"
 
 
 }

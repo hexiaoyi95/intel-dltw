@@ -39,9 +39,9 @@ def get_layers_perf(backend, config):
         per layer forward and backward time: [(layer name, layer type, elapsed_time, FPS), ... ]
     """
     fwd_elapsed_ms_net_list = []
-    fwd_elapsed_ms_layers_list = [[] for l in xrange(len(backend.layers(direction="forward")))]
+    fwd_elapsed_ms_layers_list = [[] for l in xrange(len(backend.get_layers()))]
     bwd_elapsed_ms_net_list = []
-    bwd_elapsed_ms_layers_list = [[] for l in xrange(len(backend.layers(direction="backward")))]
+    bwd_elapsed_ms_layers_list = [[] for l in xrange(len(backend.get_layers()))]
 
     for i in xrange(int(config.iteration)):
          

@@ -287,7 +287,7 @@ class CaffeBackend():
 
 
 
-    def layers(self):
+    def get_layers(self):
         return self.net.layers
 
     def get_layer_name(self, layer_id):

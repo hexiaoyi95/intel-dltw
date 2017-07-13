@@ -30,6 +30,15 @@ class ChainerBackend():
             logger.debug("Loaded weight")
 
         self.config = config
+        with chainer.function_hooks.TimerHook() as m:
+            self.prepare_benchmark(self.config) 
+            self.forward()
+            call_his = m.call_history
+        self.layers = list()
+        self.layers_name = list()
+        for i in call_his:
+            self.layers.append(i[0])
+            self.layers_name.append(i[0].label)
     def shuffle_inputs(self):
 
         utils.benchmark.shuffle_inputs(self.inputs)
@@ -193,8 +202,9 @@ class ChainerBackend():
                 #datas['%04d' % (func_num) + "_" + func_name + "_" +str(i + 1)  + "_diff"] = y.grad
                 if config.forward_only == False:
                     layer_result.append(["blob_{}".format(i),[y.data, y.grad]])
-                else: 
-                    layer_result.append(["blob_{}".format(i),[y.data]])
+                else:
+                    if y.data is not None:
+                        layer_result.append(["blob_{}".format(i),[y.data]])
             result[ '%04d' % (func_num) + "_" + func_name] = layer_result
             inputs[ '%04d' % (func_num) + "_" + func_name] = list()
             for i,x in enumerate(func.inputs):
@@ -251,25 +261,16 @@ class ChainerBackend():
                 name = len(call_his) - i -1
             ms_time = l[1]* 1000
             call.append([name,ms_time])
-
+            
         return [call,total_time_seconds * 1000]
     
-    def layers(self,direction):
+    def get_layers(self):
 
-        with chainer.function_hooks.TimerHook() as m:
-            self.prepare_benchmark(self.config) 
-            if direction == "forward":
-                self.forward()
-            elif direction == "backward":
-                self.backward()
-            call_his = m.call_history
-        layers = list()
-        for i in call_his:
-            layers.append(str(type(i[0])))
         #pprint.pprint( layers )
-        return layers
+        return self.layers
     
     def get_layer_name(self, layer_id):
+        
         return "To do"
 
     def infer(self):
@@ -292,7 +293,7 @@ class ChainerBackend():
 
     def get_layer_type(self,count):
         
-        return "To do"
+        return self.layers_name[count]
 
 
 
