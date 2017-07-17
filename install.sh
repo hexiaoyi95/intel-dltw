@@ -13,12 +13,12 @@ echo -e "${COL_BLUE}Installing python dependency...${COL_RESET}"
 pip install --user --proxy http://child-prc.intel.com:913  --trusted-host pypi.douban.com -i http://pypi.douban.com/simple -r requirements.txt
 
 echo -e "${COL_BLUE}Downloading data ...${COL_RESET}"
-wget -O dl-data.tar http://test132.sh.intel.com:666/dltw-data.tar
+http_proxy="" wget -O dl-data.tar http://test132.sh.intel.com:666/dltw-data.tar
 tar -xf dl-data.tar
 rm dl-data.tar
 
 echo -e "${COL_BLUE}Downloading models ...${COL_RESET}"
-wget -O dl-models.tar http://test132.sh.intel.com:666/dltw-models.tar
+http_proxy="" wget -O dl-models.tar http://test132.sh.intel.com:666/dltw-models.tar
 tar -xf dl-models.tar
 rm dl-models.tar
 
