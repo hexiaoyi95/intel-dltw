@@ -290,16 +290,16 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
             for i, np_arry in enumerate(np_list):
                 blob_title = list()
                 if blob_name == 'params_diff':
-                    ctx = 'params_{}_diff'.format(i)
+                    ctx = layer_name + '_params_{}_diff'.format(i)
                 elif blob_name == 'params_data':
-                    ctx = 'params_{}_data'.format(i)
+                    ctx = layer_name + '_params_{}_data'.format(i)
                 else:
                     if i == 0:
                         ctx = blob_name + '_data'
                     else:
                         ctx = blob_name + '_diff'
                 try:
-                    ref_data = np.load(os.path.join(ref_dir,layer_name.replace('/', '-'), blob_name + '_' + ctx + '.npy'))
+                    ref_data = np.load(os.path.join(ref_dir , ctx + '.npy'))
                 except IOError:
                     logger.warn("blob {} not found in refenence, skiping ...".format(blob_name))
                     this_layer_result.append(['can not find {} in reference,skiped'.format(ctx)])
@@ -324,11 +324,11 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                     if layer_name == last_layer_name and ctx == blob_name +'_data':
                         fwd_accuracy = 'fail'
 
-                    if (blob_name == 'params_diff' or ctx == blob_name + '_diff') and first_param:
+                    if (blob_name == layer_name + '_params_diff' or ctx == blob_name + '_diff') and first_param:
                         bwd_accuracy = 'fail'
                         first_param = False
 
-                    if blob_name == 'params_data':
+                    if blob_name == layer_name + '_params_data':
                         update_accuracy = 'fail'
 
 
@@ -352,7 +352,7 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
         this_batch_result.extend(this_layer_result)
 
         if this_layer_pass == 'fail':
-            with open(os.path.join(out_dir, layer_name.replace('/','-'), 'fail detail.txt'),'w') as fp:
+            with open(os.path.join(out_dir, layer_name.replace('/','-') + '_fail_detail.txt'),'w') as fp:
                 for line in detailTXT:
                     for word in line:
                         fp.write(str(word))
