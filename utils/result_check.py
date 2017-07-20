@@ -324,11 +324,11 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                     if layer_name == last_layer_name and ctx == blob_name +'_data':
                         fwd_accuracy = 'fail'
 
-                    if (blob_name == layer_name + '_params_diff' or ctx == blob_name + '_diff') and first_param:
+                    if (blob_name ==  'params_diff' or ctx == blob_name + '_diff') and first_param:
                         bwd_accuracy = 'fail'
                         first_param = False
 
-                    if blob_name == layer_name + '_params_data':
+                    if blob_name == 'params_data':
                         update_accuracy = 'fail'
 
 
