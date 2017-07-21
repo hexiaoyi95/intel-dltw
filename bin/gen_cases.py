@@ -47,7 +47,7 @@ def genModel(topology_name, prototxt_type, weight, backend):
             caffe_type = 'test'
         elif prototxt_type == 'solver':
             prototxt_name = 'solver.prototxt'
-            caffe_type = None
+            caffe_type = 'train'
         else:
             raise Exception("unsupported prototxt type, choose train_val, deploy or solver")
         if caffe_type != None:

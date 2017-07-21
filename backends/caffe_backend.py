@@ -39,11 +39,13 @@ class CaffeBackend():
 
         if config.model.prototxt_type  == 'solver':
             logger.debug("using engine: {}".format(engine))
-            solver_modified_path =  os.path.join( config.out_dir, 'solver_modified.prototxt')
+            solver_modified_path =  os.path.join( str(config.out_dir), 'solver_modified.prototxt')
+            if not os.path.exists(os.path.dirname(solver_modified_path )):
+                os.makedirs(os.path.dirname(solver_modified_path ))
             shutil.copy(str(config.model.topology), solver_modified_path)
             if engine != 'default':
                 with open(solver_modified_path ,'a') as fp:
-                    fp.write("engine: \"{}\"   ".format(engine))
+                    fp.write("engine: \"{}\" \n".format(engine))
             self.solver = caffe.get_solver( solver_modified_path )
             os.remove(solver_modified_path )
             self.net = self.solver.net

@@ -10,6 +10,7 @@
 "iteration" : 1,
 "precision" : 0.001,
 "weight" : "default",
+"batch_size" : 1,
 "input_path" : null,
 "mean_value" : null
 }
