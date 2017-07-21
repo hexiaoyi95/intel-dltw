@@ -35,15 +35,17 @@ class CaffeBackend():
 
         caffe.set_mode_cpu()
         caffe.set_random_seed(0)
+        
 
         if config.model.prototxt_type  == 'solver':
             logger.debug("using engine: {}".format(engine))
-            shutil.copy(str(config.model.topology),'temp_solver.prototxt')
+            solver_modified_path =  os.path.join( config.out_dir, 'solver_modified.prototxt')
+            shutil.copy(str(config.model.topology), solver_modified_path)
             if engine != 'default':
-                with open('temp_solver.prototxt','a') as fp:
+                with open(solver_modified_path ,'a') as fp:
                     fp.write("engine: \"{}\"   ".format(engine))
-            self.solver = caffe.get_solver('temp_solver.prototxt')
-            os.remove('temp_solver.prototxt')
+            self.solver = caffe.get_solver( solver_modified_path )
+            os.remove(solver_modified_path )
             self.net = self.solver.net
             if weight_path != None:
 	    	    self.net.copy_from(weight_path)

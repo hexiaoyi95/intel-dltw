@@ -12,11 +12,14 @@ DEFAULT_CONFIG = os.path.join(SCRIPT_HOME, '..', 'test-config', 'templates', 'im
 
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '..'))
 from utils.io import json2obj
+from utils.io import json2dict
+from utils.io import dict2json
 from applications import applications_factory
 
 def args_process():
     arg_parser = argparse.ArgumentParser(description='')
     arg_parser.add_argument('--config', '-c', default=DEFAULT_CONFIG, help='config file for running DL Applications')
+    arg_parser.add_argument('--parent_dir', '-p', default='out', help='parent dir for saving output')
     args = arg_parser.parse_args()
     return args
 
@@ -35,10 +38,16 @@ def main():
 
     setup_logger()
 
-    config = json2obj(args.config)
+    config_dict = json2dict(args.config)
+    config_dict['out_dir'] = os.path.join( args.parent_dir, config_dict['out_dir'] )
+    if config_dict.has_key('reference'):
+        config_dict['reference']['result_dir'] = os.path.join( args.parent_dir, config_dict['reference']['result_dir'] )
 
-    app = applications_factory(config.application)
-    app.run(config)
+    dict2json(config_dict, os.path.join( args.parent_dir, 'modified_conf.json'))
+    config_modified = json2obj(os.path.join( args.parent_dir, 'modified_conf.json'))
+
+    app = applications_factory(config_modified.application)
+    app.run(config_modified)
 
 if __name__ == "__main__":
     main()
