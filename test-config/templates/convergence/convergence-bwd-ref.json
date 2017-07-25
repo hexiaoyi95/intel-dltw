@@ -1,0 +1,17 @@
+{
+    "backend" : {
+        "python_path" : "dl-frameworks/dl_framework-intel_caffe/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "default"
+    },
+    "application" : "applications.convergence",
+    "model" : {
+        "topology" : "dl-models/bvlc_alexnet/img_train_val.prototxt" ,
+	"weight" : "dl-models/bvlc_alexnet/bvlc_alexnet.caffemodel",
+	"prototxt_type" : "train_val",
+        "type" : "train"
+    },
+    "forward_only": false,
+    "iteration" : 1,
+    "out_dir" : "out/convergency/ref"
+}

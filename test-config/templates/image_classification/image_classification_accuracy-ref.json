@@ -1,0 +1,20 @@
+{
+    "backend" : {
+        "python_path" : "dl-frameworks/dl_framework-intel_caffe/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "default"
+    },
+    "application" : "applications.image_classification.infer",
+    "test_type" : "accuracy",
+    "model" : {
+        "topology" : "dl-models/googlenet_v2/deploy.prototxt" ,
+	"prototxt_type" : "deploy",
+        "weight" : "dl-models/googlenet_v2/googlenet_v2.caffemodel",
+	"type" : "test"
+    },
+    "input_path" : "dl-data/ilsvrc12/test224.txt",
+    "mean_value" : [104,117,123],
+    "batch_size" : 4,
+    "iteration" : 1,
+    "out_dir" : "out/image_classification_accuracy-intel-caffe-bvlc-googlenet-4-ref"
+}

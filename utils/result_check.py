@@ -277,6 +277,7 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
     fwd_accuracy = 'pass'
     bwd_accuracy = 'pass'
     update_accuracy = 'pass'
+    test_result_str = 'pass'
     first_param = True
     for layer_name, l in test_result.iteritems():
         count +=1
@@ -294,17 +295,15 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                 elif blob_name == 'params_data':
                     ctx = layer_name + '_params_{}_data'.format(i)
                 else:
-                    if i == 0:
-                        ctx = blob_name + '_data'
-                    else:
-                        ctx = blob_name + '_diff'
+                    ctx = blob_name
                 try:
-                    ref_data = np.load(os.path.join(ref_dir , ctx + '.npy'))
+                    ref_data = np.load(os.path.join(ref_dir , ctx.replace('/','-') + '.npy'))
                 except IOError:
                     logger.warn("blob {} not found in refenence, skiping ...".format(blob_name))
                     this_layer_result.append(['can not find {} in reference,skiped'.format(ctx)])
                     continue
                 try:
+                    
                     isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
                 except TypeError:
                     logger.warn("blob{} is none type".format(blob_name))
@@ -316,21 +315,19 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                 else:
                     this_arry = 'fail'
                     this_layer_pass = 'fail'
-		    #logger.debug('layer_name {}, blob_name {}, {} '.format(layer_name, blob_name, i))
                     datail_diff = find_fail(np_arry, ref_data, ctx , precision)
                     this_layer_result.extend(datail_diff[:11])
                     detailTXT.extend(datail_diff)
+                    test_result_str = 'fail'
+                   # if ctx == blob_name +'_data' and layer_name == last_layer_name:
+                   #     fwd_accuracy = 'fail'
 
-                    if layer_name == last_layer_name and ctx == blob_name +'_data':
-                        fwd_accuracy = 'fail'
-
-                    if (blob_name ==  'params_diff' or ctx == blob_name + '_diff') and first_param:
-                        bwd_accuracy = 'fail'
-                        first_param = False
-
-                    if blob_name == 'params_data':
-                        update_accuracy = 'fail'
-
+                   # if (blob_name ==  'params_diff' or ctx == blob_name + '_diff'):
+                   #     bwd_accuracy = 'fail'
+                   # 
+                   # if blob_name == 'params_data':
+                   #     test_result_str = 'fail'
+        
 
             #     ref_sample_list.append(ctx + '_ref' + ': ')
             #     ref_sample_list.append(np.concatenate((ref_data.flatten()[1:6],ref_data.flatten()[-5:])))
@@ -363,9 +360,10 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                 fp.write('\n')
                 fp.write('\n')
 
-    this_batch_result.insert(0,['weight update: ', update_accuracy])
-    this_batch_result.insert(0,['net backward: ', bwd_accuracy])
-    this_batch_result.insert(0,['net forward: ', fwd_accuracy])
+    this_batch_result.insert(0,['Test Result: ', test_result_str])
+    #this_batch_result.insert(0,['weight update: ', update_accuracy])
+    #this_batch_result.insert(0,['net backward: ', bwd_accuracy])
+    #this_batch_result.insert(0,['net forward: ', fwd_accuracy])
     #this_batch_result.insert(0,['Test engine: {}, reference engine: {}'.format(config.backend.engine,config.reference.engine)]) 
     return this_batch_result
 

@@ -1,0 +1,19 @@
+{
+    "backend" : {
+        "python_path" : "dl-frameworks/dl_framework-intel_caffe/python",
+        "class_path" : "backends.caffe_backend.CaffeBackend",
+        "engine" : "MKL2017"
+    },
+    "application" : "applications.convergence",
+    "model" : {
+        "topology" : "dl-models/bvlc_alexnet/solver.prototxt" ,
+        "prototxt_type" : "solver",
+	"type" : "train"
+    },
+    "iteration" : 1,
+    "out_dir" : "out/convergency/out",
+    "reference" : {
+        "result_dir": "out/convergency/ref"
+    },
+    "precision" : 0.0001
+}

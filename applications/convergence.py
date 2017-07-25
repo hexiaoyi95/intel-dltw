@@ -48,12 +48,8 @@ def test_layer_accuracy(backend, config):
                 elif blob_name == 'params_data':
                     ctx = layer_name + '_params_{}_data'.format(i)
                 else:
-                    if i == 0:
-                        ctx = blob_name + '_data'
-                    else:
-                        ctx = blob_name + '_diff'
-
-                np_name = os.path.join(config.out_dir, ctx)
+                    ctx = blob_name 
+                np_name = os.path.join(config.out_dir, ctx.replace('/','-'))
                 np_name = os.path.expanduser(np_name)
                 if not os.path.exists(os.path.dirname(np_name)):
                     os.makedirs(os.path.dirname(np_name))

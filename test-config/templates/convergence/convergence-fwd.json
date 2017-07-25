@@ -6,20 +6,18 @@
     },
     "application" : "applications.convergence",
     "model" : {
-        "topology" : "dl-models/bvlc_alexnet/deploy.prototxt" ,
-	"weight" : "dl-models/bvlc_alexnet/bvlc_alexnet.caffemodel",
-        "prototxt_type" : "deploy",
-	"type" : "test"
+        "topology" : "dl-models/bvlc_alexnet/img_train_val.prototxt" ,
+        "prototxt_type" : "train_val",
+	"type" : "train"
     },
     "forward_only" : true,
     "input_path" : "dl-data/ilsvrc12/test224.txt",
     "mean_value" : [104,117,123],
-    "batch_size" : 1,
+    "batch_size" : 12,
     "iteration" : 1,
     "out_dir" : "out/convergency/out",
     "reference" : {
-        "result_dir": "out/convergency/ref",
-	"engine" : "default"
+        "result_dir": "out/convergency/ref"
     },
     "precision" : 0.0001
 }

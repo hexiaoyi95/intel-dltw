@@ -19,7 +19,7 @@ from applications import applications_factory
 def args_process():
     arg_parser = argparse.ArgumentParser(description='')
     arg_parser.add_argument('--config', '-c', default=DEFAULT_CONFIG, help='config file for running DL Applications')
-    arg_parser.add_argument('--parent_dir', '-p', default='out', help='parent dir for saving output')
+    arg_parser.add_argument('--parent_dir', '-p', default='.', help='parent dir for saving output')
     args = arg_parser.parse_args()
     return args
 

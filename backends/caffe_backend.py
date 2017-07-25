@@ -35,7 +35,7 @@ class CaffeBackend():
 
         caffe.set_mode_cpu()
         caffe.set_random_seed(0)
-        
+       
 
         if config.model.prototxt_type  == 'solver':
             logger.debug("using engine: {}".format(engine))
@@ -47,7 +47,6 @@ class CaffeBackend():
                 with open(solver_modified_path ,'a') as fp:
                     fp.write("engine: \"{}\" \n".format(engine))
             self.solver = caffe.get_solver( solver_modified_path )
-            os.remove(solver_modified_path )
             self.net = self.solver.net
             if weight_path != None:
 	    	    self.net.copy_from(weight_path)
@@ -268,23 +267,28 @@ class CaffeBackend():
         for layer_name,top_blob_names in self.net.top_names.iteritems():
             count +=1
             layer_result = list()
-
             for blob_name in top_blob_names:
                 top_blob = self.net.blobs[blob_name]
-                data = top_blob.data.copy()
-                diff = top_blob.diff.copy()
-                layer_result.append([blob_name.replace('/','-'),[data,diff]])
-
+                if hasattr(config,'forward_only') and config.forward_only:
+                    data = top_blob.data.copy()
+                    layer_result.append([blob_name + '_data', [data]])
+                #diff = top_blob.diff.copy()
+                #layer_result.append([blob_name,[data,diff]])
+                elif config.model.prototxt_type == 'train_val':
+                    diff = top_blob.diff.copy()
+                    layer_result.append([blob_name + '_diff' , [diff]])
+                    
+                    
             try:
                 paramater = self.net.params[layer_name]
             except:
                 pass
             else:
-                if config.model.prototxt_type == 'solver' or config.model.prototxt_type == 'train_val':
+                if config.model.prototxt_type == 'solver':
                     layer_result.append(['params_data',[item.data.copy() for item in paramater]])
+                elif config.model.prototxt_type == 'train_val' and not config.forward_only:
                     layer_result.append(['params_diff',[item.diff.copy() for item in paramater]])
 
-                #result[layer_name].append(['params_diff',[item.diff.copy for item in paramater]])
 
             result[layer_name] = layer_result
         return result
