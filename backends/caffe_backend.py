@@ -229,9 +229,9 @@ class CaffeBackend():
         """
         total_time = 0.0
         layers_perf = []
-        layer_ids = range(len(self.layers()))
+        layer_ids = range(len(self.get_layers()))
         if direction == 'backward':
-            layer_ids = range(len(self.layers())-1, -1, -1)
+            layer_ids = range(len(self.get_layers())-1, -1, -1)
 
         for layer_id in layer_ids:
             layer_time = self.get_layer_perf(layer_id, direction)
