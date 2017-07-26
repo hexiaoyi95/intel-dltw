@@ -10,7 +10,11 @@ COL_MAGENTA=$ESC_SEQ"35;01m"
 COL_CYAN=$ESC_SEQ"36;01m""]"
 
 echo -e "${COL_BLUE}Installing python dependency...${COL_RESET}"
-pip install --user --proxy http://child-prc.intel.com:913  --trusted-host pypi.douban.com -i http://pypi.douban.com/simple -r requirements.txt
+if pip --help | grep "trusted-host" ;then
+    pip install --user --proxy http://child-prc.intel.com:913  --trusted-host pypi.douban.com -i http://pypi.douban.com/simple -r requirements.txt
+else
+    pip install --user --proxy http://child-prc.intel.com:913  -i http://pypi.douban.com/simple -r requirements.txt
+fi
 
 echo -e "${COL_BLUE}Downloading data ...${COL_RESET}"
 http_proxy="" wget -O dl-data.tar http://test132.sh.intel.com:666/dltw-data.tar
