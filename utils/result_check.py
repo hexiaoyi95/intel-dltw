@@ -248,7 +248,6 @@ def find_fail(data, data_ref, ctx, precision):
     result = list()
     count = 0
     if data.shape == data_ref.shape:
-        
         difrens = abs(data - data_ref) - abs(data_ref)*1e-02 - precision
         for index,val in np.ndenumerate(difrens):
             if val >= 0 or math.isnan(data[index]) or math.isnan(data_ref[index]):
@@ -304,7 +303,9 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                     this_layer_result.append(['can not find {} in reference,skiped'.format(ctx)])
                     continue
                 try:
-                    
+                    #deal with the case in which data's size match but shape not match
+                    if( np_arry.size == ref_data.size and np_arry.shape != ref_data.shape ):
+                        np_arry = np_arry.reshape( ref_data.shape)    
                     isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
                 except TypeError:
                     logger.warn("blob{} is none type".format(blob_name))
