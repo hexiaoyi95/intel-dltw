@@ -24,6 +24,7 @@ def cal4result(backend, config):
             backend.forward()
             if not config.forward_only:
                 logger.info('processing {}th backward'.format(i))
+                #backend.clear_param_diffs() 
                 backend.backward()
 
     logger.debug('collecting data')

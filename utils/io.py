@@ -117,63 +117,91 @@ def genConfFilename(json_path, getJson_only= True):
     
     confDict =json2dict(json_path)
     app = confDict['application']
-    ref = confDict['ref']
-    ref_confList = confDict[ref]
-    ref_confValue = ref_confList['ref']
-    template_init = json2dict( 'test-config/' + app + '-template.json')
+    ref_item = confDict['ref'][0]
+    ref_index = confDict['ref'][1]
+    ref_value = confDict[ref_item][ref_index-1] 
+    template_init = json2dict( 'test-config/templates-for-gen-cases/' + app + '-template.json')
     iter_list = list()
     ref_list = list()
-    for i, arg in confDict[ref].iteritems():
-        if i != 'ref':
-            ref_list.append([ref, arg])
+    for i, arg in enumerate(confDict[ref_item]):
+        if i != ref_index:
+            ref_list.append([ref_item, arg])
         else: 
-            ref_list.insert(0,[ref, arg])
+            ref_list.insert(0,[ref_item, arg])
     iter_list.append(ref_list)
 
-    for item, argDict in confDict.iteritems():
-        if item != 'application' and item != 'ref' and item !=ref :
-            l = list()
-            if type(argDict) != type(dict()):
-                l.append([item,argDict])
-            else:
-                for i, arg in argDict.iteritems():
-                    l.append([item,arg])
-            iter_list.append(l)
+    for item, value_list in confDict.iteritems():
+        if item != 'application' and item != 'ref' and item !=ref_item :
+            item_value_iter = list()
+            for value in value_list:
+                item_value_iter.append([item,value])
+            iter_list.append(item_value_iter)
+    
+    #pre-process
+    item_permutation = itertools.product(*iter_list)
+    modified_confs = list()
+    for itemList in item_permutation:
+        itemDict = dict(itemList)
+        modified_confs.append(conf_pre_process(itemDict))
     
     title_generated = False
     result_list = list()
-    with open('result.txt','w') as fp:
-        for confList in itertools.product(*iter_list):
-            #print ref_conf,ref_confValue, confList
+    with open(os.path.join('test-config-debug',os.path.splitext(os.path.basename(json_path))[0] + '.txt'),'w') as fp:    
+        for confDict in modified_confs:
+            #print ref_conf,ref_value, confList
             ref_dir = app
             out_dir = app 
+            cur_line = ''
             is_ref = False
             template = copy.deepcopy(template_init)
             if not title_generated:
-                for [confName,_] in confList:
+                for confName,confValue in confDict.iteritems():
                     fp.write(confName + '\t')
                 fp.write('report')
                 fp.write('\n')
                 title_generated = True
-            for [confName, value] in confList:
+            
+            for confName, value in confDict.iteritems():
                 template[confName] = value
                 out_dir += '_' + str(value).replace('/','-')
-                fp.write(str(value) + '\t')
-                if confName == ref:
-                    ref_dir += '_' + str(ref_confValue).replace('/','-')
-                    if ref_confValue == value:
+                cur_line +=str(value) + '\t'
+                if confName == ref_item:
+                    ref_dir += '_' + str(ref_value).replace('/','-')
+                    if ref_value == value:
                         is_ref = True
                 else: 
                     ref_dir += '_' + str(value).replace('/','-')
+            
             if not is_ref:
                 template['reference_dir'] = ref_dir 
-            fp.write(out_dir + '/test_report.txt')
-            fp.write('\n')
+                fp.write(cur_line)
+                fp.write(out_dir + '/test_report.txt')
+                fp.write('\n')
             template['out_dir'] = out_dir
             jsonPath = 'test-config-debug/' + out_dir + '.json'
+            
             if getJson_only:
                 result_list.append([jsonPath,is_ref])
             else:
-                result_list.append( [jsonPath, template])
+                result_list.append([jsonPath, template])
+    
     return result_list
-        
+
+def conf_pre_process(itemDict):
+            
+    if itemDict.has_key('prototxt_type') and itemDict['prototxt_type'] == 'solver':
+        itemDict.pop('forward_only',-1)
+    
+    if itemDict.has_key('batch_size') and itemDict['batch_size'] == 'default':
+        if itemDict['topology'] == 'bvlc_alexnet':
+            itemDict['batch_size'] = 256
+        elif itemDict['topology'] == 'bvlc_googlenet':
+            itemDict['batch_size'] = 32 
+        elif itemDict['topology'] == 'googlenet_v2':
+            itemDict['batch_size'] = 32 
+        elif itemDict['topology'] == 'resnet_50':
+            itemDict['batch_size'] = 50
+        elif itemDict['topology'] == 'vgg_19':
+            itemDict['batch_size'] = 64 
+   
+    return itemDict

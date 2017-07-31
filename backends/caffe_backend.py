@@ -9,6 +9,9 @@ import inspect
 from collections import OrderedDict
 import pprint
 import shutil
+from caffe.proto import caffe_pb2
+import google.protobuf.text_format as txtf
+
 logger = logging.getLogger('root')
 class CaffeBackend():
     def __init__(self, config):
@@ -35,7 +38,17 @@ class CaffeBackend():
 
         caffe.set_mode_cpu()
         caffe.set_random_seed(0)
-       
+        if hasattr(config,'batch_size') and config.model.prototxt_type == 'train_val':
+            net_params = caffe_pb2.NetParameter()
+            with open(config.model.topology) as f:
+                s = f.read()
+                txtf.Merge(s,net_params)
+            input_layer = net_params.layer[0]
+            input_layer.image_data_param.batch_size = config.batch_size
+            modified_net = 'modified_train_val.prototxt'
+            topology_path = os.path.join(str(config.out_dir),modified_net)
+            with open( topology_path, 'w') as fp:
+               fp.write(str(net_params))
 
         if config.model.prototxt_type  == 'solver':
             logger.debug("using engine: {}".format(engine))
@@ -293,7 +306,9 @@ class CaffeBackend():
             result[layer_name] = layer_result
         return result
 
-
+    def clear_param_diffs(self):   
+        
+        self.net.clear_param_diffs()
 
     def get_layers(self):
         return self.net.layers

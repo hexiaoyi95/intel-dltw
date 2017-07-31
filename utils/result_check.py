@@ -247,7 +247,7 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
 def find_fail(data, data_ref, ctx, precision):
     result = list()
     count = 0
-    if data.size == data_ref.size:
+    if data.shape == data_ref.shape:
         
         difrens = abs(data - data_ref) - abs(data_ref)*1e-02 - precision
         for index,val in np.ndenumerate(difrens):
@@ -258,7 +258,8 @@ def find_fail(data, data_ref, ctx, precision):
                 count = 0
                 break
     else:
-        raise Exception('compared arrys shape not match %d vs %d' %(data.size,data_ref.size))
+        logger.warn('compared arrys shape not match %s vs %s' %(str(data.shape),str(data_ref.shape)))
+        return [[ctx,"the shape of test data: %s do not match the one of reference: %s" % (str(data.shape),str(data_ref.shape))]]
     result.insert(0,['id','coordinate','test value','reference value'])
     if count == 0:
         result.insert(0, [ctx, 'blob shape: ' + str(data.shape), 'total fail: >100/{}'.format(data.size)])

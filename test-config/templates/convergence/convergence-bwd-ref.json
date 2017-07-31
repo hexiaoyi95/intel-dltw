@@ -12,6 +12,6 @@
         "type" : "train"
     },
     "forward_only": false,
-    "iteration" : 1,
+    "iteration" : 2,
     "out_dir" : "out/convergency/ref"
 }

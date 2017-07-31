@@ -20,6 +20,7 @@ def args_process():
     arg_parser = argparse.ArgumentParser(description='')
     arg_parser.add_argument('--config', '-c', default=DEFAULT_CONFIG, help='config file for running DL Applications')
     arg_parser.add_argument('--parent_dir', '-p', default='.', help='parent dir for saving output')
+    arg_parser.add_argument('--python_path', '-pp', default='', help='python path of backend')
     args = arg_parser.parse_args()
     return args
 
@@ -40,8 +41,12 @@ def main():
 
     config_dict = json2dict(args.config)
     config_dict['out_dir'] = os.path.join( args.parent_dir, config_dict['out_dir'] )
+
     if config_dict.has_key('reference'):
         config_dict['reference']['result_dir'] = os.path.join( args.parent_dir, config_dict['reference']['result_dir'] )
+    
+    if args.python_path != '' :
+        config_dict['backend']['python_path'] = args.python_path
 
     dict2json(config_dict, os.path.join( args.parent_dir, 'modified_conf.json'))
     config_modified = json2obj(os.path.join( args.parent_dir, 'modified_conf.json'))
