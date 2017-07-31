@@ -281,7 +281,9 @@ class CaffeBackend():
             count +=1
             layer_result = list()
             for blob_name in top_blob_names:
-                top_blob = self.net.blobs[blob_name]
+                layer_id = self.get_layer_id(layer_name) 
+                top_blob = self.net.blobs[blob_name]      
+                    
                 if hasattr(config,'forward_only') and config.forward_only:
                     data = top_blob.data.copy()
                     layer_result.append([blob_name + '_data', [data]])
@@ -301,9 +303,21 @@ class CaffeBackend():
                     layer_result.append(['params_data',[item.data.copy() for item in paramater]])
                 elif config.model.prototxt_type == 'train_val' and not config.forward_only:
                     layer_result.append(['params_diff',[item.diff.copy() for item in paramater]])
-
+             
 
             result[layer_name] = layer_result
+        #for fix the issue which MKL2017 optimization rule 3 make
+        if config.model.type == 'train' and config.backend.engine == 'MKL2017':
+            for layer_name,layer_result in result.iteritems():
+                layer_id = self.get_layer_id(layer_name)
+                for index,[blob_name, data_list] in enumerate(layer_result):
+                    #blob_name=orig_name + '_x' + '_data' or '_diff',now we want to rm '_x'
+                    if blob_name.split('_')[-2] == 'x':
+                        blob_name = blob_name[:-7]+blob_name[-5:]
+                        result[self.get_layer_name(layer_id)][index] = [blob_name,data_list]
+                        if self.get_layer_type(layer_id-1) == 'MklConvolution' \
+                            and self.get_layer_type(layer_id) == 'BatchNorm':
+                            result[self.get_layer_name(layer_id-1)][index] = [blob_name,data_list] 
         return result
 
     def clear_param_diffs(self):   
@@ -312,6 +326,9 @@ class CaffeBackend():
 
     def get_layers(self):
         return self.net.layers
+
+    def get_layer_id(self, layer_name):
+        return list(self.net._layer_names).index(layer_name)
 
     def get_layer_name(self, layer_id):
         return list(self.net._layer_names)[layer_id]
