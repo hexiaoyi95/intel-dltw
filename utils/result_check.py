@@ -7,6 +7,7 @@ import pprint
 import os
 import math
 
+
 def iscloseFP(a, b, precision=PRECISION):
     return abs(a-b) < precision
 
@@ -244,9 +245,45 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
 
     return last_res
 
-def find_fail(data, data_ref, ctx, precision):
+def check_result_mklUnitTest(data, data_ref, ctx, epsilon1=1e-04, epsilon2=1e-04):
     result = list()
     count = 0
+    check_result = True
+    if data.shape == data_ref.shape:
+        for index, val_ref in np.ndenumerate(data_ref):
+            diff= data[index] - val_ref
+            if abs(val_ref) < epsilon1:
+                if abs(diff) >= epsilon2:
+                    check_result = False
+                    count += 1
+                    result.append([count, index, str(data[index]) , str(data_ref[index])])
+            else:
+                if abs(diff/val_ref) >= epsilon2:
+                    check_result = False
+                    count += 1
+                    result.append([count, index, str(data[index]) , str(data_ref[index])])
+            if count >= 100:
+                count = 0
+                break 
+    else:
+        logger.warn('compared arrys shape not match %s vs %s'  \
+            %(str(data.shape),str(data_ref.shape)))
+        return [[ctx,"the shape of test data: %s do not match the one of reference: %s" \
+            % (str(data.shape),str(data_ref.shape))]]
+    result.insert(0,['id','coordinate','test value','reference value'])
+    
+    if count == 0:
+        result.insert(0, [ctx, 'blob shape: ' + str(data.shape), \
+            'total fail: >100/{}'.format(data.size)])
+    else:
+        result.insert(0,[ctx, 'blob shape: '+ str(data.shape) , \
+            'total fail: {}/{}'.format(count,data.size)])
+    return check_result,result
+
+def find_fail(data, data_ref, ctx, precision=1e-03):#epsilon1=1e-04, epsilon2=1e-04):
+    result = list()
+    count = 0
+    check_result = True
     if data.shape == data_ref.shape:
         difrens = abs(data - data_ref) - abs(data_ref)*1e-02 - precision
         for index,val in np.ndenumerate(difrens):
@@ -257,13 +294,18 @@ def find_fail(data, data_ref, ctx, precision):
                 count = 0
                 break
     else:
-        logger.warn('compared arrys shape not match %s vs %s' %(str(data.shape),str(data_ref.shape)))
-        return [[ctx,"the shape of test data: %s do not match the one of reference: %s" % (str(data.shape),str(data_ref.shape))]]
+        logger.warn('compared arrys shape not match %s vs %s'  \
+            %(str(data.shape),str(data_ref.shape)))
+        return [[ctx,"the shape of test data: %s do not match the one of reference: %s" \
+            % (str(data.shape),str(data_ref.shape))]]
     result.insert(0,['id','coordinate','test value','reference value'])
+    
     if count == 0:
-        result.insert(0, [ctx, 'blob shape: ' + str(data.shape), 'total fail: >100/{}'.format(data.size)])
+        result.insert(0, [ctx, 'blob shape: ' + str(data.shape), \
+            'total fail: >100/{}'.format(data.size)])
     else:
-        result.insert(0,[ctx, 'blob shape: '+ str(data.shape) , 'total fail: {}/{}'.format(count,data.size)])
+        result.insert(0,[ctx, 'blob shape: '+ str(data.shape) , \
+            'total fail: {}/{}'.format(count,data.size)])
     return result
 
 def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, precision=1e-04):
@@ -307,6 +349,8 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                     if( np_arry.size == ref_data.size and np_arry.shape != ref_data.shape ):
                         np_arry = np_arry.reshape( ref_data.shape)    
                     isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
+                    #isequal,detail_diff=find_fail(np_arry, ref_data, ctx)
+                    
                 except TypeError:
                     logger.warn("blob{} is none type".format(blob_name))
                     continue
@@ -317,9 +361,9 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                 else:
                     this_arry = 'fail'
                     this_layer_pass = 'fail'
-                    datail_diff = find_fail(np_arry, ref_data, ctx , precision)
-                    this_layer_result.extend(datail_diff[:11])
-                    detailTXT.extend(datail_diff)
+                    detail_diff = find_fail(np_arry, ref_data, ctx , precision)
+                    this_layer_result.extend(detail_diff[:11])
+                    detailTXT.extend(detail_diff)
                     test_result_str = 'fail'
                    # if ctx == blob_name +'_data' and layer_name == last_layer_name:
                    #     fwd_accuracy = 'fail'
