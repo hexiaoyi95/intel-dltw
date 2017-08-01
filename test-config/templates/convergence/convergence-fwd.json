@@ -7,12 +7,11 @@
     "application" : "applications.convergence",
     "model" : {
         "topology" : "dl-models/bvlc_alexnet/img_train_val.prototxt" ,
+	"weight" : "dl-models/bvlc_alexnet/bvlc_alexnet.caffemodel",
         "prototxt_type" : "train_val",
 	"type" : "train"
     },
     "forward_only" : true,
-    "input_path" : "dl-data/ilsvrc12/test224.txt",
-    "mean_value" : [104,117,123],
     "iteration" : 1,
     "out_dir" : "out/convergency/out",
     "reference" : {
