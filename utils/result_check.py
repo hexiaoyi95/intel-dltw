@@ -263,7 +263,7 @@ def check_result_mklUnitTest(data, data_ref, ctx, epsilon1=1e-04, epsilon2=1e-04
     else:
         logger.warn('compared arrys shape not match %s vs %s'  \
             %(str(data.shape),str(data_ref.shape)))
-        return [[ctx,"the shape of test data: %s do not match the one of reference: %s" \
+        return False,[[ctx,"the shape of test data: %s do not match the one of reference: %s" \
             % (str(data.shape),str(data_ref.shape))]]
     result.insert(0,['id','coordinate','test value','reference value'])
     
@@ -294,7 +294,7 @@ def check_result_npAllClose(data, data_ref, ctx, precision=1e-03):#epsilon1=1e-0
     else:
         logger.warn('compared arrys shape not match %s vs %s'  \
             %(str(data.shape),str(data_ref.shape)))
-        return [[ctx,"the shape of test data: %s do not match the one of reference: %s" \
+        return False,[[ctx,"the shape of test data: %s do not match the one of reference: %s" \
             % (str(data.shape),str(data_ref.shape))]]
     result.insert(0,['id','coordinate','test value','reference value'])
     

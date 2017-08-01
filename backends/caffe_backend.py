@@ -48,7 +48,7 @@ class CaffeBackend():
             modified_net = 'modified_train_val.prototxt'
             topology_path = os.path.join(str(config.out_dir),modified_net)
             if not os.path.exists(os.path.dirname(topology_path)):
-                os.mkdir(os.path.dirname(topology_path))
+                os.makedirs(os.path.dirname(topology_path))
             with open( topology_path, 'w') as fp:
                fp.write(str(net_params))
 

@@ -43,7 +43,7 @@ def main():
     report_path_txt = os.path.join('test-config-debug',os.path.splitext(os.path.basename(args.config))[0] + '.txt' )
 
     if not os.path.exists(args.parent_dir):
-        os.mkdir(args.parent_dir)
+        os.makedirs(args.parent_dir)
  
     call(["mv",report_path_txt, os.path.join(args.parent_dir,'find_the_report.txt')])
     
@@ -51,7 +51,7 @@ def main():
     raw_lines = list()
     if args.run_ref == 'on':
         shutil.rmtree(args.parent_dir)
-        os.mkdir(args.parent_dir)
+        os.makedirs(args.parent_dir)
     else:
         with open(os.path.join(args.parent_dir,'find_the_report.txt')) as fp:
             #skip the first line(title),get report path
