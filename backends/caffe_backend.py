@@ -47,6 +47,8 @@ class CaffeBackend():
             input_layer.image_data_param.batch_size = config.batch_size
             modified_net = 'modified_train_val.prototxt'
             topology_path = os.path.join(str(config.out_dir),modified_net)
+            if not os.path.exists(os.path.dirname(topology_path)):
+                os.mkdir(os.path.dirname(topology_path))
             with open( topology_path, 'w') as fp:
                fp.write(str(net_params))
 

@@ -1,21 +1,13 @@
 {
     "application" : "accuracy",
-    "ref" : "engine",
-    "prototxt_type" : "train_val",
-    "engine" : {
-	"test_1": "MKLDNN",
-	"ref" : "default"
-    },
-    "topology" : {
-	"test_1" : "bvlc_alexnet",
-	"test_2" : "bvlc_googlenet",
-	"test_3" : "googlenet_v2",
-	"test_4" : "vgg_19",
-	"test_5" : "resnet_50"
-    },
-    "batch_size" : {
-	"test_1" : "1"
-    }
+    "ref" : ["engine",1],
+    "prototxt_type" : ["train_val","solver"],
+    "engine" :  [ "MKL2017","MKLDNN", "default"],
+    "iteration" : [1],
+    "topology" : ["bvlc_alexnet","bvlc_googlenet","googlenet_v2","vgg_19","resnet_50"],
+    "batch_size" : ["default"],
+    "forward_only" : [true,false],
+    "accuracy_level" : ["fwd","bdw"] 
 }
 
 

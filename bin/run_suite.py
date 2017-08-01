@@ -51,6 +51,7 @@ def main():
     raw_lines = list()
     if args.run_ref == 'on':
         shutil.rmtree(args.parent_dir)
+        os.mkdir(args.parent_dir)
     else:
         with open(os.path.join(args.parent_dir,'find_the_report.txt')) as fp:
             #skip the first line(title),get report path

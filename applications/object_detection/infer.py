@@ -69,7 +69,7 @@ def test_inference_accuracy(backend, config):
     #     out_file = os.path.join(ref_config.out_dir, 'accuracy.json')
     #     utils.io.dict2json(ref_outputs, out_file)
 
-    if config.is_ref == False:
+    if hasattr(config, 'reference'):
         res = check_detection_result(out_file, config.reference.result_file)
         pprint.pprint(res)
         res_check_file = os.path.join(config.out_dir, 'check.json')

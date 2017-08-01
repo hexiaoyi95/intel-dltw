@@ -13,7 +13,6 @@
     "forward_only" : true,
     "input_path" : "dl-data/ilsvrc12/test224.txt",
     "mean_value" : [104,117,123],
-    "batch_size" : 12,
     "iteration" : 1,
     "out_dir" : "out/convergency/out",
     "reference" : {

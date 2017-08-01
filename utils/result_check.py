@@ -248,20 +248,15 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
 def check_result_mklUnitTest(data, data_ref, ctx, epsilon1=1e-04, epsilon2=1e-04):
     result = list()
     count = 0
-    check_result = True
+    isequal = True
     if data.shape == data_ref.shape:
         for index, val_ref in np.ndenumerate(data_ref):
             diff= data[index] - val_ref
-            if abs(val_ref) < epsilon1:
-                if abs(diff) >= epsilon2:
-                    check_result = False
-                    count += 1
-                    result.append([count, index, str(data[index]) , str(data_ref[index])])
-            else:
-                if abs(diff/val_ref) >= epsilon2:
-                    check_result = False
-                    count += 1
-                    result.append([count, index, str(data[index]) , str(data_ref[index])])
+            error = diff if abs(val_ref) < epsilon1 else diff/val_ref
+            if abs(error) >= epsilon2:
+                check_result = False
+                count += 1
+                result.append([count, index, str(data[index]) , str(data_ref[index])])
             if count >= 100:
                 count = 0
                 break 
@@ -280,11 +275,14 @@ def check_result_mklUnitTest(data, data_ref, ctx, epsilon1=1e-04, epsilon2=1e-04
             'total fail: {}/{}'.format(count,data.size)])
     return check_result,result
 
-def find_fail(data, data_ref, ctx, precision=1e-03):#epsilon1=1e-04, epsilon2=1e-04):
+def check_result_npAllClose(data, data_ref, ctx, precision=1e-03):#epsilon1=1e-04, epsilon2=1e-04):
     result = list()
     count = 0
     check_result = True
     if data.shape == data_ref.shape:
+        isequal = np.allclose(data, data_ref,  rtol=1e-02, atol=precision, equal_nan = False)
+        if isequal:
+            return isequal,result
         difrens = abs(data - data_ref) - abs(data_ref)*1e-02 - precision
         for index,val in np.ndenumerate(difrens):
             if val >= 0 or math.isnan(data[index]) or math.isnan(data_ref[index]):
@@ -306,9 +304,9 @@ def find_fail(data, data_ref, ctx, precision=1e-03):#epsilon1=1e-04, epsilon2=1e
     else:
         result.insert(0,[ctx, 'blob shape: '+ str(data.shape) , \
             'total fail: {}/{}'.format(count,data.size)])
-    return result
+    return isequal,result
 
-def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, precision=1e-04):
+def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, precision=1e-04,check_method='npAllClose'):
 
     this_batch_result = list()
     this_batch_result.append(['-']*40)
@@ -348,9 +346,11 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                     #deal with the case in which data's size match but shape not match
                     if( np_arry.size == ref_data.size and np_arry.shape != ref_data.shape ):
                         np_arry = np_arry.reshape( ref_data.shape)    
-                    isequal = np.allclose(np_arry, ref_data,  rtol=1e-02, atol=precision, equal_nan = True)
-                    #isequal,detail_diff=find_fail(np_arry, ref_data, ctx)
-                    
+                    if check_method == 'npAllClose':
+                        isequal,detail_diff=check_result_npAllClose(np_arry, ref_data, ctx, \
+                                            precision)
+                    elif check_method == 'mklUnitTest':
+                        isequal,detail_diff=check_result_mklUnitTest(np_arry,ref_data, ctx)
                 except TypeError:
                     logger.warn("blob{} is none type".format(blob_name))
                     continue
@@ -361,7 +361,7 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                 else:
                     this_arry = 'fail'
                     this_layer_pass = 'fail'
-                    detail_diff = find_fail(np_arry, ref_data, ctx , precision)
+                    #detail_diff = find_fail(np_arry, ref_data, ctx , precision)
                     this_layer_result.extend(detail_diff[:11])
                     detailTXT.extend(detail_diff)
                     test_result_str = 'fail'

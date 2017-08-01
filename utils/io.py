@@ -119,7 +119,7 @@ def genConfFilename(json_path, getJson_only= True):
     app = confDict['application']
     ref_item = confDict['ref'][0]
     ref_index = confDict['ref'][1]
-    ref_value = confDict[ref_item][ref_index-1] 
+    ref_value = confDict[ref_item][ref_index] 
     template_init = json2dict( 'test-config/templates-for-gen-cases/' + app + '-template.json')
     iter_list = list()
     ref_list = list()
@@ -141,14 +141,20 @@ def genConfFilename(json_path, getJson_only= True):
     item_permutation = itertools.product(*iter_list)
     modified_confs = list()
     for itemList in item_permutation:
-        itemDict = dict(itemList)
-        modified_confs.append(conf_pre_process(itemDict))
+        itemDict = conf_pre_process(dict(itemList))
+        if len(modified_confs) == 0:
+            modified_confs.append(itemDict)
+            continue
+        for conf in modified_confs:
+            if len(conf.keys()) != len(itemDict.keys()) \
+                or len(set(conf.items()) & set(itemDict.items())) != len(conf.keys()):
+                modified_confs.append(itemDict)
+                break
     
     title_generated = False
     result_list = list()
     with open(os.path.join('test-config-debug',os.path.splitext(os.path.basename(json_path))[0] + '.txt'),'w') as fp:    
         for confDict in modified_confs:
-            #print ref_conf,ref_value, confList
             ref_dir = app
             out_dir = app 
             cur_line = ''
@@ -163,14 +169,14 @@ def genConfFilename(json_path, getJson_only= True):
             
             for confName, value in confDict.iteritems():
                 template[confName] = value
-                out_dir += '_' + str(value).replace('/','-')
+                out_dir += '_' + get_short_name(confName)+'-'+str(value).replace('/','-')
                 cur_line +=str(value) + '\t'
                 if confName == ref_item:
-                    ref_dir += '_' + str(ref_value).replace('/','-')
+                    ref_dir += '_' + get_short_name(confName)+'-'+str(ref_value).replace('/','-')
                     if ref_value == value:
                         is_ref = True
                 else: 
-                    ref_dir += '_' + str(value).replace('/','-')
+                    ref_dir += '_' + get_short_name(confName)+'-'+str(value).replace('/','-')
             
             if not is_ref:
                 template['reference_dir'] = ref_dir 
@@ -187,8 +193,30 @@ def genConfFilename(json_path, getJson_only= True):
     
     return result_list
 
+def get_short_name(fullname):
+    
+    short_name = ''
+    if len(fullname.split('_')) > 1:
+        for i in fullname.split('_'):
+            short_name += i[0]
+    else:
+        short_name = fullname[0:3]
+    return short_name
+
 def conf_pre_process(itemDict):
-            
+           
+    if itemDict.has_key('accuracy_level'):
+        accuracy_level = itemDict['accuracy_level'] 
+        if accuracy_level == 'fwd':
+            itemDict['prototxt_type'] = 'train_val'
+            itemDict['forward_only'] = True
+        elif accuracy_level == 'bwd':
+            itemDict['prototxt_type'] = 'train_val'
+            itemDict['forward_only'] = False
+        elif accuracy_level == 'train' :
+            itemDict['prototxt_type'] = 'solver'            
+        itemDict.pop('accuracy_level') 
+
     if itemDict.has_key('prototxt_type') and itemDict['prototxt_type'] == 'solver':
         itemDict.pop('forward_only',-1)
     
@@ -203,5 +231,5 @@ def conf_pre_process(itemDict):
             itemDict['batch_size'] = 50
         elif itemDict['topology'] == 'vgg_19':
             itemDict['batch_size'] = 64 
-   
+    
     return itemDict
