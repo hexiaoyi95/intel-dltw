@@ -313,6 +313,8 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
 
     count = -1
 
+    if hasattr(config,'forward_only') and not config.forward_only and config.model.prototxt_type:
+        accuracy_level = 'bwd'
     last_layer_name = test_result.keys()[len(test_result)-1]
     fwd_accuracy = 'pass'
     bwd_accuracy = 'pass'
@@ -364,7 +366,11 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                     #detail_diff = find_fail(np_arry, ref_data, ctx , precision)
                     this_layer_result.extend(detail_diff[:11])
                     detailTXT.extend(detail_diff)
-                    test_result_str = 'fail'
+                    if accuracy_level == 'bwd':
+                        if blob_name == 'params_diff':
+                            test_result_str = 'fail'
+                    else:
+                        test_result_str = 'fail'
                    # if ctx == blob_name +'_data' and layer_name == last_layer_name:
                    #     fwd_accuracy = 'fail'
 

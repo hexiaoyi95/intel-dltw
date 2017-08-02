@@ -44,7 +44,18 @@ class CaffeBackend():
                 s = f.read()
                 txtf.Merge(s,net_params)
             input_layer = net_params.layer[0]
-            input_layer.image_data_param.batch_size = config.batch_size
+            if input_layer.type == 'ImageData':
+                input_layer.image_data_param.batch_size = config.batch_size
+            elif input_layer.type == 'Data' or input_layer.type == 'AnnotatedData':
+                input_layer.data_param.batch_size = config.batch_size
+            elif input_layer.type == 'HDF5Data':
+                input_layer.hdf5_data_param.batch_size = config.batch_size
+            elif input_layer.type == 'WindowData':
+                input_layer.window_data_param.batch_size = config.batch_size
+            elif input_layer.type == 'MemoryData':
+                input_layer.memory_data_param.batch_size = config.batch_size
+            else:
+                logger.warn('failed to set the batch_size,using default one in prototxt') 
             modified_net = 'modified_train_val.prototxt'
             topology_path = os.path.join(str(config.out_dir),modified_net)
             if not os.path.exists(os.path.dirname(topology_path)):
