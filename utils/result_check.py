@@ -306,7 +306,7 @@ def check_result_npAllClose(data, data_ref, ctx, precision=1e-03):#epsilon1=1e-0
             %(str(data.shape),str(data_ref.shape)))
         return False,[[ctx,"the shape of test data: %s do not match the one of reference: %s" \
             % (str(data.shape),str(data_ref.shape))]]
-    result.insert(0,['id','coordinate','test value','reference value'])
+    result.insert(0,['id','test value','reference value'])
     
     result.insert(0,[ctx, 'blob shape: '+ str(data.shape) , \
             'total fail: {}/{}'.format(count,data.size)])
