@@ -9,7 +9,7 @@
         "topology" : "dl-models/bvlc_alexnet/solver.prototxt" ,
 	"weight" : "dl-models/bvlc_alexnet/bvlc_alexnet.caffemodel",
 	"prototxt_type" : "solver",
-        "type" : "test"
+        "type" : "train"
     },
     "iteration" : 1,
     "out_dir" : "out/convergency/ref"
