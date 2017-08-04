@@ -231,5 +231,10 @@ def conf_pre_process(itemDict):
             itemDict['batch_size'] = 50
         elif itemDict['topology'] == 'vgg_19':
             itemDict['batch_size'] = 64 
+        elif itemDict['topology'] == 'ssd':
+            itemDict['batch_size'] = 32
+        elif itemDict['topology'] == 'googlenet_v3':
+            itemDict['batch_size'] = 64 
+        
     
     return itemDict
