@@ -1,4 +1,4 @@
-net: "dl-models/googlenet_v3/img_train_val.prototxt"
+net: "dl-models/googlenet_v3/lmdb_train_val.prototxt"
 test_iter: 1000
 test_interval: 4000
 test_initialization: false
@@ -14,4 +14,4 @@ momentum: 0.9
 weight_decay: 0.0002
 snapshot: 40000
 snapshot_prefix: "dl-models/googlenet_v3/googlenet_v3"
-solver_mode: GPU
+solver_mode: CPU
