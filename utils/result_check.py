@@ -275,7 +275,7 @@ def check_result_mklUnitTest(data, data_ref, ctx, epsilon1=1e-04, epsilon2=1e-04
             'total fail: {}/{}'.format(count,data.size)])
     return check_result,result
 
-def check_result_npAllClose(data, data_ref, ctx, precision=1e-03):#epsilon1=1e-04, epsilon2=1e-04):
+def check_result_npAllClose(data, data_ref, ctx, precision=1e-03):
     result = list()
     count = 0
     check_result = True
@@ -286,6 +286,7 @@ def check_result_npAllClose(data, data_ref, ctx, precision=1e-03):#epsilon1=1e-0
         pick_array = np.less_equal(abs(data_ref)*1e-02 + precision, abs(data - data_ref))
         data_fail = data[pick_array]   
         data_ref_fail = data_ref[pick_array]
+        #index_fail = np.transpose(np.nonzero(pick_array))
         count = len(data_fail)
         fail_num = len(data_fail) if len(data_fail) < 100 else 100
         for i in range(fail_num):
@@ -319,7 +320,7 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
 
     count = -1
     accuracy_level = ''
-    if hasattr(config,'forward_only') and not config.forward_only and config.model.prototxt_type:
+    if hasattr(config,'forward_only') and not config.forward_only and config.model.prototxt_type == 'train_val':
         accuracy_level = 'bwd'
     last_layer_name = test_result.keys()[len(test_result)-1]
     fwd_accuracy = 'pass'

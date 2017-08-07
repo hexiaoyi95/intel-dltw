@@ -45,7 +45,6 @@ def main():
     if not os.path.exists(args.parent_dir):
         os.makedirs(args.parent_dir)
  
-    call(["mv",report_path_txt, os.path.join(args.parent_dir,'find_the_report.txt')])
     
     report_path_list=list()
     raw_lines = list()
@@ -61,6 +60,7 @@ def main():
                 real_path = os.path.join( args.parent_dir, os.path.dirname(report_path))
                 if os.path.exists(real_path):
                     shutil.rmtree(real_path)
+    call(["cp",report_path_txt, os.path.join(args.parent_dir,'find_the_report.txt')])
     
     for jsonPath,is_ref in jsonPathList:
         if is_ref and args.run_ref != 'on':
@@ -68,6 +68,11 @@ def main():
         call(["./bin/run_case.py", "-c", jsonPath, "-p", args.parent_dir, "-pp", args.python_path])
     test_case_successed = 0
     test_case_failed = 0
+
+    if os.path.exists(os.path.join(args.parent_dir,'test_report')):
+        shutil.rmtree(os.path.join(args.parent_dir,'test_report'))
+    os.makedirs(os.path.join(args.parent_dir,'test_report'))
+
     with open(os.path.join(args.parent_dir,'test_result.txt'),'w') as test_result_fp:
         for index,line in enumerate(raw_lines):    
             if index == 0:
@@ -81,6 +86,8 @@ def main():
                 except:
                     test_case_failed += 1
                 else:
+                    call(["cp", os.path.join(args.parent_dir,report_path), \
+                        os.path.join(args.parent_dir,'test_report',os.path.dirname(report_path) + '.txt')])
                     test_case_successed +=1
                     pass_or_fail = report_fp.readline().strip().split('\t')[-1]
                     new_line = line.strip() + '\t' + pass_or_fail

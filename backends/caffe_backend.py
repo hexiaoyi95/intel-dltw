@@ -65,14 +65,21 @@ class CaffeBackend():
 
         if config.model.prototxt_type  == 'solver':
             logger.debug("using engine: {}".format(engine))
-            solver_modified_path =  os.path.join( str(config.out_dir), 'solver_modified.prototxt')
-            if not os.path.exists(os.path.dirname(solver_modified_path )):
-                os.makedirs(os.path.dirname(solver_modified_path ))
-            shutil.copy(str(config.model.topology), solver_modified_path)
-            if engine != 'default':
-                with open(solver_modified_path ,'a') as fp:
-                    fp.write("engine: \"{}\" \n".format(engine))
-            self.solver = caffe.get_solver( solver_modified_path )
+            modified_solver_path =  os.path.join( str(config.out_dir), 'modified_solver.prototxt')
+            if not os.path.exists(os.path.dirname(modified_solver_path )):
+                os.makedirs(os.path.dirname(modified_solver_path ))
+            solver_params = caffe_pb2.SolverParameter()
+            with open(config.model.topology) as f:
+                s = f.read()
+                txtf.Merge(s,solver_params)
+            solver_params.engine = engine
+            with open( modified_solver_path, 'w') as fp:
+                fp.write(str(solver_params))           
+            #shutil.copy(str(config.model.topology), modified_solver_path)
+            #if engine != 'default':
+            #    with open(modified_solver_path ,'a') as fp:
+            #        fp.write("engine: \"{}\" \n".format(engine))
+            self.solver = caffe.get_solver( modified_solver_path )
             self.net = self.solver.net
             if weight_path != None:
 	    	    self.net.copy_from(weight_path)
@@ -320,7 +327,12 @@ class CaffeBackend():
 
             result[layer_name] = layer_result
         #for fix the issue which MKL2017 optimization rule 3 make
-        if config.model.type == 'train' and config.backend.engine == 'MKL2017':
+        if config.model.type == 'train' and ( config.backend.engine == 'MKL2017' or \
+                config.backend.engine == 'MKLDNN' ):
+            if config.backend.engine == 'MKL2017':
+                conv_type = 'MklConvolution'
+            else:
+                conv_type = 'Convolution'
             for layer_name,layer_result in result.iteritems():
                 layer_id = self.get_layer_id(layer_name)
                 for index,[blob_name, data_list] in enumerate(layer_result):
@@ -328,7 +340,7 @@ class CaffeBackend():
                     if blob_name.split('_')[-2] == 'x':
                         blob_name = blob_name[:-7]+blob_name[-5:]
                         result[self.get_layer_name(layer_id)][index] = [blob_name,data_list]
-                        if self.get_layer_type(layer_id-1) == 'MklConvolution' \
+                        if self.get_layer_type(layer_id-1) == conv_type \
                             and self.get_layer_type(layer_id) == 'BatchNorm':
                             result[self.get_layer_name(layer_id-1)][index] = [blob_name,data_list] 
         return result
@@ -365,13 +377,3 @@ class CaffeBackend():
         self.net.forward()
     def backward(self):
         self.net.backward()
-#    def backward(self):
-#        top_diff = {}
-#        for i in xrange(len(self.net.outputs)):
-#            #print self.net.outputs[i]
-#            diff = np.zeros_like(self.net.blobs[self.net.outputs[i]].diff)
-#            diff += 1000
-#            top_diff[self.net.outputs[i]] = diff[...]
-#        self.net.backward(**top_diff)
-#
-        #print self.net.blobs['conv1_1'].diff
