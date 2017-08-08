@@ -1,13 +1,11 @@
 {
     "application" : "accuracy",
     "ref" : ["engine",1],
-    "prototxt_type" : ["train_val","solver"],
     "engine" :  [ "MKL2017","MKLDNN", "default"],
     "iteration" : [1],
     "topology" : ["bvlc_alexnet","bvlc_googlenet","googlenet_v2","vgg_19","resnet_50"],
     "batch_size" : ["default"],
-    "forward_only" : [true,false],
-    "accuracy_level" : ["fwd","bdw"] 
+    "accuracy_level" : ["fwd","bdw","train"] 
 }
 
 

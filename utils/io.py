@@ -123,13 +123,16 @@ def genConfFilename(json_path, getJson_only= True):
     template_init = json2dict( 'test-config/templates-for-gen-cases/' + app + '-template.json')
     iter_list = list()
     ref_list = list()
+
+    #insert the ref item to the head of iter list
+    #each iter list include every possible value of ref item
     for i, arg in enumerate(confDict[ref_item]):
         if i != ref_index:
             ref_list.append([ref_item, arg])
         else: 
             ref_list.insert(0,[ref_item, arg])
     iter_list.append(ref_list)
-
+    #get the rest iter list
     for item, value_list in confDict.iteritems():
         if item != 'application' and item != 'ref' and item !=ref_item :
             item_value_iter = list()
@@ -137,14 +140,17 @@ def genConfFilename(json_path, getJson_only= True):
                 item_value_iter.append([item,value])
             iter_list.append(item_value_iter)
     
-    #pre-process
+    #get permutaions from all iter list
     item_permutation = itertools.product(*iter_list)
+
+    #pre-process
     modified_confs = list()
     for itemList in item_permutation:
         itemDict = conf_pre_process(dict(itemList))
         if len(modified_confs) == 0:
             modified_confs.append(itemDict)
             continue
+        #remove the same config
         for conf in modified_confs:
             if len(conf.keys()) != len(itemDict.keys()) \
                 or len(set(conf.items()) & set(itemDict.items())) != len(conf.keys()):
@@ -153,7 +159,11 @@ def genConfFilename(json_path, getJson_only= True):
     
     title_generated = False
     result_list = list()
-    with open(os.path.join('test-config-debug',os.path.splitext(os.path.basename(json_path))[0] + '.txt'),'w') as fp:    
+    #write the txt which including the detail of each config and the path of test report.
+    cases_info =  os.path.join('test-config-debug',os.path.splitext(os.path.basename(json_path))[0] + '.txt')
+    if not os.path.exists(os.path.dirname(cases_info)):
+       os.makedirs(os.path.dirname(cases_info))
+    with open(cases_info,'w') as fp:  
         for confDict in modified_confs:
             ref_dir = app
             out_dir = app 
@@ -171,6 +181,7 @@ def genConfFilename(json_path, getJson_only= True):
                 template[confName] = value
                 out_dir += '_' + get_short_name(confName)+'-'+str(value).replace('/','-')
                 cur_line +=str(value) + '\t'
+                #replace the value of ref item to get ref dir
                 if confName == ref_item:
                     ref_dir += '_' + get_short_name(confName)+'-'+str(ref_value).replace('/','-')
                     if ref_value == value:

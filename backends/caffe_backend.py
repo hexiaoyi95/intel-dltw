@@ -346,7 +346,6 @@ class CaffeBackend():
         return result
 
     def clear_param_diffs(self):   
-        
         self.net.clear_param_diffs()
 
     def get_layers(self):

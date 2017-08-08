@@ -286,31 +286,25 @@ def check_result_npAllClose(data, data_ref, ctx, precision=1e-03):
         pick_array = np.less_equal(abs(data_ref)*1e-02 + precision, abs(data - data_ref))
         data_fail = data[pick_array]   
         data_ref_fail = data_ref[pick_array]
+        #get the index of value, will influence the performance
         #index_fail = np.transpose(np.nonzero(pick_array))
         count = len(data_fail)
+        #only get 100 failed value at most
         fail_num = len(data_fail) if len(data_fail) < 100 else 100
         for i in range(fail_num):
             result.append([i, str(data_fail[i]) , str(data_ref_fail[i])])
-       # for index,val in np.ndenumerate(difrens):
-       #     timer1.start()
-       #     if val >= 0 or math.isnan(data[index]) or math.isnan(data_ref[index]):
-       #         count +=1
-       #         result.append([count, index, str(data[index]) , str(data_ref[index])])
-       #     if count >= 100:
-       #         count = 0
-       #         break
-       #     timer1.stop()
-       #     logger.debug(" get diff once {}".format(timer1.milliseconds()))
 
     else:
         logger.warn('compared arrys shape not match %s vs %s'  \
             %(str(data.shape),str(data_ref.shape)))
         return False,[[ctx,"the shape of test data: %s do not match the one of reference: %s" \
             % (str(data.shape),str(data_ref.shape))]]
+
     result.insert(0,['id','test value','reference value'])
     
     result.insert(0,[ctx, 'blob shape: '+ str(data.shape) , \
             'total fail: {}/{}'.format(count,data.size)])
+
     return isequal,result
 
 def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, precision=1e-04,check_method='npAllClose'):
@@ -320,7 +314,8 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
 
     count = -1
     accuracy_level = ''
-    if hasattr(config,'forward_only') and not config.forward_only and config.model.prototxt_type == 'train_val':
+    if hasattr(config,'forward_only') and not config.forward_only and \
+        config.model.prototxt_type == 'train_val':
         accuracy_level = 'bwd'
     last_layer_name = test_result.keys()[len(test_result)-1]
     fwd_accuracy = 'pass'

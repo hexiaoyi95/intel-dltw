@@ -51,16 +51,17 @@ def main():
     if args.run_ref == 'on':
         shutil.rmtree(args.parent_dir)
         os.makedirs(args.parent_dir)
-    else:
-        with open(os.path.join(args.parent_dir,'find_the_report.txt')) as fp:
-            #skip the first line(title),get report path
-            raw_lines = fp.readlines()
-            report_path_list = [ x.split('\t')[-1].strip() for x in raw_lines[1:]]
-            for report_path in report_path_list:         
-                real_path = os.path.join( args.parent_dir, os.path.dirname(report_path))
-                if os.path.exists(real_path):
-                    shutil.rmtree(real_path)
+    
     call(["cp",report_path_txt, os.path.join(args.parent_dir,'find_the_report.txt')])
+    
+    with open(os.path.join(args.parent_dir,'find_the_report.txt')) as fp:
+        #skip the first line(title),get report path
+        raw_lines = fp.readlines()
+        report_path_list = [ x.split('\t')[-1].strip() for x in raw_lines[1:]]
+        for report_path in report_path_list:         
+            real_path = os.path.join( args.parent_dir, os.path.dirname(report_path))
+            if os.path.exists(real_path):
+                shutil.rmtree(real_path)
     
     for jsonPath,is_ref in jsonPathList:
         if is_ref and args.run_ref != 'on':
