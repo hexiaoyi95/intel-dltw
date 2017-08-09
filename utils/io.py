@@ -160,9 +160,13 @@ def genConfFilename(json_path, getJson_only= True):
     title_generated = False
     result_list = list()
     #write the txt which including the detail of each config and the path of test report.
-    cases_info =  os.path.join('test-config-debug',os.path.splitext(os.path.basename(json_path))[0] + '.txt')
+    cases_info =  os.path.join('test-config-debug',\
+        os.path.splitext(os.path.basename(json_path))[0] + '.txt')
+    cases_info_json =  os.path.join('test-config-debug',\
+        os.path.splitext(os.path.basename(json_path))[0] + '_cases_info.json')
     if not os.path.exists(os.path.dirname(cases_info)):
        os.makedirs(os.path.dirname(cases_info))
+    
     with open(cases_info,'w') as fp:  
         for confDict in modified_confs:
             ref_dir = app
@@ -176,7 +180,7 @@ def genConfFilename(json_path, getJson_only= True):
                 fp.write('report')
                 fp.write('\n')
                 title_generated = True
-            
+             
             for confName, value in confDict.iteritems():
                 template[confName] = value
                 out_dir += '_' + get_short_name(confName)+'-'+str(value).replace('/','-')
@@ -188,19 +192,21 @@ def genConfFilename(json_path, getJson_only= True):
                         is_ref = True
                 else: 
                     ref_dir += '_' + get_short_name(confName)+'-'+str(value).replace('/','-')
-            
+            confDict['is_ref'] = is_ref
             if not is_ref:
                 template['reference_dir'] = ref_dir 
+                confDict['report_path'] = out_dir + '/test_report.txt'
                 fp.write(cur_line)
                 fp.write(out_dir + '/test_report.txt')
                 fp.write('\n')
             template['out_dir'] = out_dir
-            jsonPath = 'test-config-debug/' + out_dir + '.json'
-            
+            output_json_name = 'test-config-debug/' + out_dir + '.json'
+             
             if getJson_only:
-                result_list.append([jsonPath,is_ref])
+                result_list.append([output_json_name,is_ref])
             else:
-                result_list.append([jsonPath, template])
+                result_list.append([output_json_name, template])
+    dict2json({ 'creator': json_path, 'application': app, 'cases_info' : modified_confs}, cases_info_json)
     
     return result_list
 

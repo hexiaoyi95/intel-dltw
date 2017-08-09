@@ -42,6 +42,8 @@ def main():
     jsonPathList = io.genConfFilename(args.config)
     report_path_txt = os.path.join('test-config-debug',os.path.splitext(os.path.basename(args.config))[0] + '.txt' )
 
+    cases_info_json = os.path.join('test-config-debug',os.path.splitext(os.path.basename(args.config))[0] + '_cases_info.json' )
+
     if not os.path.exists(args.parent_dir):
         os.makedirs(args.parent_dir)
  
@@ -74,27 +76,50 @@ def main():
         shutil.rmtree(os.path.join(args.parent_dir,'test_report'))
     os.makedirs(os.path.join(args.parent_dir,'test_report'))
 
-    with open(os.path.join(args.parent_dir,'test_result.txt'),'w') as test_result_fp:
-        for index,line in enumerate(raw_lines):    
-            if index == 0:
-                new_line = line.strip() + '\t' + 'pass/fail'
-                test_result_fp.write(new_line)
-                test_result_fp.write('\n')
-            else:
-                report_path = line.split('\t')[-1].strip()
+  #  with open(os.path.join(args.parent_dir,'test_result.txt'),'w') as test_result_fp:
+  #      for index,line in enumerate(raw_lines):    
+  #          if index == 0:
+  #              new_line = line.strip() + '\t' + 'pass/fail'
+  #              test_result_fp.write(new_line)
+  #              test_result_fp.write('\n')
+  #          else:
+  #              report_path = line.split('\t')[-1].strip()
+  #              try:
+  #                  report_fp = open(os.path.join(args.parent_dir,report_path))
+  #              except:
+  #                  test_case_failed += 1
+  #              else:
+  #                  call(["cp", os.path.join(args.parent_dir,report_path), \
+  #                      os.path.join(args.parent_dir,'test_report',os.path.dirname(report_path) + '.txt')])
+  #                  test_case_successed +=1
+  #                  pass_or_fail = report_fp.readline().strip().split('\t')[-1]
+  #                  new_line = line.strip() + '\t' + pass_or_fail
+  #                  test_result_fp.write(new_line)
+  #                  test_result_fp.write('\n')
+  #                  report_fp.close()
+
+    cases_info = io.json2dict(cases_info_json)
+    if cases_info['application'] == 'accuracy':
+        cases_info_list = cases_info['cases_info']
+        for case_info_dict in cases_info_list:
+            if case_info_dict.has_key('report_path'):
+                report_path = case_info_dict['report_path'] 
                 try:
                     report_fp = open(os.path.join(args.parent_dir,report_path))
                 except:
-                    test_case_failed += 1
+                    case_info_dict['test_result'] = 'cannot find test report' 
+                    case_info_dict['report_path'] = ''
                 else:
                     call(["cp", os.path.join(args.parent_dir,report_path), \
                         os.path.join(args.parent_dir,'test_report',os.path.dirname(report_path) + '.txt')])
                     test_case_successed +=1
                     pass_or_fail = report_fp.readline().strip().split('\t')[-1]
-                    new_line = line.strip() + '\t' + pass_or_fail
-                    test_result_fp.write(new_line)
-                    test_result_fp.write('\n')
+                    case_info_dict['test_result'] = pass_or_fail
+                    case_info_dict['report_path'] = os.path.join('test_report',\
+                        os.path.dirname(report_path) + '.txt')
                     report_fp.close()
+
+    io.dict2json(cases_info, os.path.join(args.parent_dir,'test_results.json')) 
     
 if __name__ == '__main__':
     main()
