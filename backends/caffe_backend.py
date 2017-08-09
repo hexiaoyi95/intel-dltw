@@ -38,30 +38,10 @@ class CaffeBackend():
 
         caffe.set_mode_cpu()
         caffe.set_random_seed(0)
+
         if hasattr(config,'batch_size') and config.model.prototxt_type == 'train_val':
-            net_params = caffe_pb2.NetParameter()
-            with open(config.model.topology) as f:
-                s = f.read()
-                txtf.Merge(s,net_params)
-            input_layer = net_params.layer[0]
-            if input_layer.type == 'ImageData':
-                input_layer.image_data_param.batch_size = config.batch_size
-            elif input_layer.type == 'Data' or input_layer.type == 'AnnotatedData':
-                input_layer.data_param.batch_size = config.batch_size
-            elif input_layer.type == 'HDF5Data':
-                input_layer.hdf5_data_param.batch_size = config.batch_size
-            elif input_layer.type == 'WindowData':
-                input_layer.window_data_param.batch_size = config.batch_size
-            elif input_layer.type == 'MemoryData':
-                input_layer.memory_data_param.batch_size = config.batch_size
-            else:
-                logger.warn('failed to set the batch_size,using default one in prototxt') 
-            modified_net = 'modified_train_val.prototxt'
-            topology_path = os.path.join(str(config.out_dir),modified_net)
-            if not os.path.exists(os.path.dirname(topology_path)):
-                os.makedirs(os.path.dirname(topology_path))
-            with open( topology_path, 'w') as fp:
-               fp.write(str(net_params))
+            topology_path = self.reshape_in_train_val( topology_path, config.batch_size, \
+                config.out_dir,)
 
         if config.model.prototxt_type  == 'solver':
             logger.debug("using engine: {}".format(engine))
@@ -73,12 +53,11 @@ class CaffeBackend():
                 s = f.read()
                 txtf.Merge(s,solver_params)
             solver_params.engine = engine
+            if hasattr(config, 'batch_size'):
+                solver_params.net = self.reshape_in_train_val( str(solver_params.net), \
+                    config.batch_size, config.out_dir) 
             with open( modified_solver_path, 'w') as fp:
                 fp.write(str(solver_params))           
-            #shutil.copy(str(config.model.topology), modified_solver_path)
-            #if engine != 'default':
-            #    with open(modified_solver_path ,'a') as fp:
-            #        fp.write("engine: \"{}\" \n".format(engine))
             self.solver = caffe.get_solver( modified_solver_path )
             self.net = self.solver.net
             if weight_path != None:
@@ -150,7 +129,33 @@ class CaffeBackend():
               for img in inputs]
 
         return inputs
-
+    
+    def reshape_in_train_val(self, topology_path, batch_size, out_dir):
+        net_params = caffe_pb2.NetParameter()
+        with open(topology_path) as f:
+            s = f.read()
+            txtf.Merge(s,net_params)
+        input_layer = net_params.layer[0]
+        if input_layer.type == 'ImageData':
+            input_layer.image_data_param.batch_size = batch_size
+        elif input_layer.type == 'Data' or input_layer.type == 'AnnotatedData':
+            input_layer.data_param.batch_size = batch_size
+        elif input_layer.type == 'HDF5Data':
+            input_layer.hdf5_data_param.batch_size = batch_size
+        elif input_layer.type == 'WindowData':
+            input_layer.window_data_param.batch_size = batch_size
+        elif input_layer.type == 'MemoryData':
+            input_layer.memory_data_param.batch_size = batch_size
+        else:
+            logger.warn('failed to set the batch_size,using default one in prototxt') 
+        modified_net = 'modified_train_val.prototxt'
+        modified_topology_path = os.path.join(str(out_dir),modified_net)
+        if not os.path.exists(os.path.dirname(modified_topology_path)):
+            os.makedirs(os.path.dirname(modified_topology_path))
+        with open( modified_topology_path, 'w') as fp:
+           fp.write(str(net_params))
+        
+        return modified_topology_path
 
     def reshape_by_batch_size(self, batch_size):
         if self.get_layer_type(0) == 'Data':
