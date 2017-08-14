@@ -3,13 +3,15 @@
 import jinja2
 import json
 import sys
+import os
 from jinja2 import Environment, PackageLoader
+SCRIPT_HOME=os.path.dirname(os.path.realpath(__file__))
 input_json = list()
 for i in range(1,len(sys.argv)):
     with open(sys.argv[i],'r') as fp:
         input_json.append(json.load(fp))
-env = Environment(loader=jinja2.FileSystemLoader('./'))
-template = env.get_template('test_template.html')
+env = Environment(loader=jinja2.FileSystemLoader(SCRIPT_HOME))
+template = env.get_template(os.path.join(SCRIPT_HOME,'test_template.html'))
 
 ctxs = list()
 title = list()
