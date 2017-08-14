@@ -21,6 +21,7 @@ def args_process():
     arg_parser.add_argument('--parent_dir', '-p', default='core_out', help='parent dir for saving output')
     arg_parser.add_argument('--run_ref', '-r', default='off', help='whether rerun reference')
     arg_parser.add_argument('--python_path', '-pp', default='', help='python path of backend')
+    arg_parser.add_argument('--cpu_type', '-cpu', default='core', help='target cpu type')
     args = arg_parser.parse_args()
     return args
 
@@ -34,6 +35,24 @@ def setup_logger():
     # logger.addHandler(handler)
     # return logging.getLogger(name)
 
+def modify_conf(case_info_dict):
+    if case_info_dict['prototxt_type'] == 'train_val': 
+        if case_info_dict['forward_only']:
+            case_info_dict['accuracy_level'] = 'fwd'
+        else:
+            case_info_dict['accuracy_level'] = 'bwd'
+        case_info_dict.pop('prototxt_type')
+        case_info_dict.pop('forward_only')
+    elif case_info_dict['prototxt_type'] == 'solver':
+        case_info_dict.pop('prototxt_type')
+        case_info_dict['accuracy_level'] = 'train'
+
+    if case_info_dict['engine'] == 'default':
+        case_info_dict['engine'] = 'CAFFE'
+
+
+    return case_info_dict
+    
 def main():
     args = args_process()
 
@@ -99,9 +118,12 @@ def main():
   #                  report_fp.close()
 
     cases_info = io.json2dict(cases_info_json)
+    cases_info['cpu_type'] = args.cpu_type
     if cases_info['application'] == 'accuracy':
         cases_info_list = cases_info['cases_info']
         for case_info_dict in cases_info_list:
+            
+            #find test result
             if case_info_dict.has_key('report_path'):
                 report_path = case_info_dict['report_path'] 
                 try:
@@ -118,7 +140,9 @@ def main():
                     case_info_dict['report_path'] = os.path.join('test_report',\
                         os.path.dirname(report_path) + '.txt')
                     report_fp.close()
-
+            #redefine  
+            case_info_dict = modify_conf(case_info_dict)
+                
     io.dict2json(cases_info, os.path.join(args.parent_dir,'test_results.json')) 
     
 if __name__ == '__main__':
