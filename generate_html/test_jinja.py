@@ -11,7 +11,7 @@ for i in range(1,len(sys.argv)):
     with open(sys.argv[i],'r') as fp:
         input_json.append(json.load(fp))
 env = Environment(loader=jinja2.FileSystemLoader(SCRIPT_HOME))
-template = env.get_template(os.path.join(SCRIPT_HOME,'test_template.html'))
+template = env.get_template(os.path.join('test_template.html'))
 
 ctxs = list()
 title = list()
@@ -30,6 +30,6 @@ for aFile in input_json:
     ctxs.append(cases)
     caption.append('application:{}, cpu_type:{} '.format(aFile['application'],aFile['cpu_type']))
 
-with open('test_result.html','w') as fp:
+with open(os.path.join(SCRIPT_HOME,'test_result.html'),'w') as fp:
     #template.render(heads = ['head1','head2'])
     fp.write(template.render(tableNum=range(len(sys.argv)-1),caption = caption, ctxs=ctxs, title = title))
