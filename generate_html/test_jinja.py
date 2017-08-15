@@ -28,7 +28,7 @@ for aFile in input_json:
     aTitle.append('test_result')
     title.append(aTitle)
     ctxs.append(cases)
-    caption.append('application:{}, cpu_type:{} '.format(aFile['application'],aFile['cpu_type']))
+    caption.append('application: {}, cpu_type: {} '.format(aFile['application'],aFile['cpu_type']))
 
 with open(os.path.join(SCRIPT_HOME,'test_result.html'),'w') as fp:
     #template.render(heads = ['head1','head2'])

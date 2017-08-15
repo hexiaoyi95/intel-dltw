@@ -1,4 +1,4 @@
-<!-- <pre> -->
+<pre>
 <!DOCTYPE>
 <html lang="en">
 <head>
@@ -8,7 +8,7 @@
       border-collapse: collapse;
   }
   caption {
-      font-size: 30px;
+      font-size: 25px;
   }
   th, td {
       padding: 5px;
@@ -19,33 +19,27 @@
   </style>
 </head>
 <body>
-  <div class="container">
     {% for i in tableNum %}
-    <div class="row">
-      <div class="col-sm-offset-1 col-sm-10">
-        <table class="table table-striped">
-          <caption>{{ caption[i] }}</caption>
-          <tr>
-            {% for item in title[i] %}
-            <th>{{ item }} </th>
-            {% endfor %}
-          </tr>
-          {% for ctx in ctxs[i] %}
-          <tr>
-            {% for item in title[i] %}
-            {% if item in ctx.keys() %}
-            <td> {{ ctx[item] }} </td>
-            {% else %}
-            <td> \ </td>
-            {% endif %}
-            {% endfor %}
-          </tr>
-          {% endfor %}
-        </table>
-      </div>
-    </div>
+	<table class="table table-striped">
+	  <caption>{{ caption[i] }}</caption>
+	  <tr>
+	    {% for item in title[i] %}
+	    <th>{{ item }} </th>
+	    {% endfor %}
+	  </tr>
+	  {% for ctx in ctxs[i] %}
+	  <tr>
+	    {% for item in title[i] %}
+	    {% if item in ctx.keys() %}
+	    <td> {{ ctx[item] }} </td>
+	    {% else %}
+	    <td> \ </td>
+	    {% endif %}
+	    {% endfor %}
+	  </tr>
+	  {% endfor %}
+	</table>
     {% endfor %}
-  </div>
 </body>
 </html>
-<!-- </pre> -->
+</pre>
