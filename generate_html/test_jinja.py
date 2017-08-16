@@ -16,20 +16,32 @@ template = env.get_template(os.path.join('test_template.html'))
 ctxs = list()
 title = list()
 caption = list()
+            
 for aFile in input_json:
     aTitle = set()
-    cases = aFile['cases_info']
-    for case in cases:
+    cases = [ i for i in aFile['cases_info'] if not i['is_ref']]
+    for index,case in enumerate(cases):
         if case.has_key('report_path'):
             case.pop('report_path')
+	if case.has_key('is_ref'):
+	    case.pop('is_ref')
         aTitle.update(case.keys())
-    aTitle.remove('test_result')
     aTitle = list(aTitle)
-    aTitle.append('test_result')
-    title.append(aTitle)
-    ctxs.append(cases)
-    caption.append('application: {}, cpu_type: {} '.format(aFile['application'],aFile['cpu_type']))
+    
+    if 'test_result' in aTitle:
+        aTitle.remove('test_result')
+        aTitle.append('test_result')
+    if 'topology' in aTitle:
+        aTitle.remove('topology')
+        aTitle.insert(0,'topology')
+    aCaption='application: {}, cpu_type: {} '.format(aFile['application'],aFile['cpu_type'])
+    if aCaption not in caption:
+    	caption.append(aCaption)
+    	ctxs.append(cases)
+    	title.append(aTitle)
+    else:
+	index = caption.index(aCaption)
+	ctxs[index].extend(cases)
 
 with open(os.path.join(SCRIPT_HOME,'test_result.html'),'w') as fp:
-    #template.render(heads = ['head1','head2'])
     fp.write(template.render(tableNum=range(len(sys.argv)-1),caption = caption, ctxs=ctxs, title = title))

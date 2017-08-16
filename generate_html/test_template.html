@@ -1,4 +1,3 @@
-<pre>
 <!DOCTYPE>
 <html lang="en">
 <head>
@@ -31,7 +30,11 @@
 	  <tr>
 	    {% for item in title[i] %}
 	    {% if item in ctx.keys() %}
-	    <td> {{ ctx[item] }} </td>
+	      {% if ctx[item] == "fail" %}
+	    	<td style="color: red"> {{ ctx[item] }} </td>
+	      {% else %}
+	    	<td> {{ ctx[item] }} </td>
+	      {% endif %}	
 	    {% else %}
 	    <td> \ </td>
 	    {% endif %}
@@ -42,4 +45,3 @@
     {% endfor %}
 </body>
 </html>
-</pre>
