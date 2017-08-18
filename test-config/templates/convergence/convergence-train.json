@@ -11,6 +11,7 @@
         "prototxt_type" : "solver",
 	"type" : "train"
     },
+    "batch_size" : 1,
     "iteration" : 1,
     "out_dir" : "out/convergency/out",
     "reference" : {

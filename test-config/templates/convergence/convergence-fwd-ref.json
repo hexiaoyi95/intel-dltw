@@ -11,6 +11,7 @@
 	"prototxt_type" : "train_val",
         "type" : "train"
     },
+    "batch_size" : 1,
     "forward_only": true,
     "iteration" : 1,
     "out_dir" : "out/convergency/ref"

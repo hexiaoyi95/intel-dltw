@@ -252,7 +252,7 @@ def check_result_mklUnitTest(data, data_ref, ctx, rtol, atol):
     if data.shape == data_ref.shape:
         for index, val_ref in np.ndenumerate(data_ref):
             diff= data[index] - val_ref
-            error = diff if abs(val_ref) < atol else diff/val_ref
+            error = diff if abs(val_ref) <= atol else diff/val_ref
             if abs(error) >= rtol:
                 check_result = False
                 count += 1
@@ -346,20 +346,26 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, r
                     logger.warn("blob {} not found in refenence, skiping ...".format(blob_name))
                     this_layer_result.append(['can not find {} in reference,skiped'.format(ctx)])
                     continue
-                try:
-                    #deal with the case in which data's size match but shape not match
-                    if( np_arry.size == ref_data.size and np_arry.shape != ref_data.shape ):
-                        np_arry = np_arry.reshape( ref_data.shape)    
-                    if check_method == 'npAllClose':
-                        isequal,detail_diff=check_result_npAllClose(np_arry, ref_data, ctx, \
-                                            rtol, atol)
-                    elif check_method == 'mklUnitTest':
-                        isequal,detail_diff=check_result_mklUnitTest(np_arry,ref_data, ctx, rtol, atol)
-                    else:
-                        raise Exception('Unexcepted check method: {}'.format(check_method))
-                except TypeError:
-                    logger.warn("blob{} is none type".format(blob_name))
-                    continue
+                #deal with the case in which data's size match but shape not match
+                if np_arry.size == ref_data.size and np_arry.shape != ref_data.shape:
+                    np_arry = np_arry.reshape( ref_data.shape)    
+
+                if is_data_layer(backend.get_layer_type(backend.get_layer_id(layer_name))):
+                    rtol_real= 0.0
+                    atol_real= 0.0
+                else:
+                    rtol_real = rtol
+                    atol_real = atol
+
+                if check_method == 'npAllClose':
+                    isequal,detail_diff=check_result_npAllClose(np_arry, ref_data, ctx, \
+                                        rtol_real, atol_real)
+                elif check_method == 'mklUnitTest':
+                    isequal,detail_diff=check_result_mklUnitTest(np_arry,ref_data, ctx, \
+                                        rtol_real, atol_real)
+                else:
+                    raise Exception('Unexcepted check method: {}'.format(check_method))
+
                 if isequal:
                     this_arry = 'pass'
                     blob_title.append(ctx + ': ' + this_arry)
@@ -495,4 +501,9 @@ def layer_accuracy_debug(batch_num, img_names, test_result,ref_dir, precision=1e
 
     return this_batch_result
 
-
+def is_data_layer(layer_type):
+    data_layer = ['ImageData','Data','HDF5Data','WindowData','MemoryData']
+    if str(layer_type) in data_layer:
+        return True
+    else:
+        return False 

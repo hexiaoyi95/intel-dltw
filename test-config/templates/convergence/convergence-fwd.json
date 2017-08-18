@@ -12,6 +12,7 @@
 	"type" : "train"
     },
     "forward_only" : true,
+    "batch_size" : 1,
     "iteration" : 1,
     "out_dir" : "out/convergency/out",
     "reference" : {
