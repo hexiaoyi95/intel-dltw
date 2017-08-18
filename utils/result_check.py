@@ -245,15 +245,15 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
 
     return last_res
 
-def check_result_mklUnitTest(data, data_ref, ctx, epsilon1=1e-04, epsilon2=1e-04):
+def check_result_mklUnitTest(data, data_ref, ctx, rtol, atol):
     result = list()
     count = 0
-    isequal = True
+    check_result = True
     if data.shape == data_ref.shape:
         for index, val_ref in np.ndenumerate(data_ref):
             diff= data[index] - val_ref
-            error = diff if abs(val_ref) < epsilon1 else diff/val_ref
-            if abs(error) >= epsilon2:
+            error = diff if abs(val_ref) < atol else diff/val_ref
+            if abs(error) >= rtol:
                 check_result = False
                 count += 1
                 result.append([count, index, str(data[index]) , str(data_ref[index])])
@@ -275,15 +275,15 @@ def check_result_mklUnitTest(data, data_ref, ctx, epsilon1=1e-04, epsilon2=1e-04
             'total fail: {}/{}'.format(count,data.size)])
     return check_result,result
 
-def check_result_npAllClose(data, data_ref, ctx, precision=1e-03):
+def check_result_npAllClose(data, data_ref, ctx, rtol, atol):
     result = list()
     count = 0
     check_result = True
     if data.shape == data_ref.shape:
-        isequal = np.allclose(data, data_ref,  rtol=1e-02, atol=precision, equal_nan = False)
+        isequal = np.allclose(data, data_ref, rtol=rtol, atol=atol, equal_nan=False)
         if isequal:
             return isequal,result
-        pick_array = np.less_equal(abs(data_ref)*1e-02 + precision, abs(data - data_ref))
+        pick_array = np.less_equal(abs(data_ref)*rtol  + atol, abs(data - data_ref))
         data_fail = data[pick_array]   
         data_ref_fail = data_ref[pick_array]
         #get the index of value, will influence the performance
@@ -307,7 +307,7 @@ def check_result_npAllClose(data, data_ref, ctx, precision=1e-03):
 
     return isequal,result
 
-def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, precision=1e-04,check_method='npAllClose'):
+def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, rtol=1e-02, atol=1e-04, check_method='npAllClose'):
 
     this_batch_result = list()
     this_batch_result.append(['-']*40)
@@ -352,9 +352,11 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, p
                         np_arry = np_arry.reshape( ref_data.shape)    
                     if check_method == 'npAllClose':
                         isequal,detail_diff=check_result_npAllClose(np_arry, ref_data, ctx, \
-                                            precision)
+                                            rtol, atol)
                     elif check_method == 'mklUnitTest':
-                        isequal,detail_diff=check_result_mklUnitTest(np_arry,ref_data, ctx)
+                        isequal,detail_diff=check_result_mklUnitTest(np_arry,ref_data, ctx, rtol, atol)
+                    else:
+                        raise Exception('Unexcepted check method: {}'.format(check_method))
                 except TypeError:
                     logger.warn("blob{} is none type".format(blob_name))
                     continue

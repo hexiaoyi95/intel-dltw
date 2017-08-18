@@ -16,5 +16,9 @@
     "reference" : {
         "result_dir": "out/convergency/ref"
     },
-    "precision" : 0.0001
+    "precision" : {
+	"rtol" : 1e-02,
+	"atol" : 1e-04,
+	"check_method" : "npAllClose"
+    }
 }
