@@ -252,12 +252,12 @@ layer {
   name: "relu5"
   type: "ReLU"
   bottom: "conv5"
-  top: "relu5_out"
+  top: "conv5"
 }
 layer {
   name: "pool5"
   type: "Pooling"
-  bottom: "relu5_out"
+  bottom: "conv5"
   top: "pool5"
   pooling_param {
     pool: MAX
