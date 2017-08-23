@@ -16,7 +16,9 @@
     "iteration" : 1,
     "out_dir" : "out/convergency/out",
     "reference" : {
-        "result_dir": "out/convergency/ref"
+        "result_dir": "out/convergency/ref",
+	"ref_item" : "engine",
+	"ref_value" : "default"
     },
     "precision" : {
 	"rtol" : 1e-02,

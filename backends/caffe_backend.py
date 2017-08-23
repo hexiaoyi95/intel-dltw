@@ -364,7 +364,22 @@ class CaffeBackend():
 
     def get_layer_type(self, layer_id):
         return list(self.net.layers)[layer_id].type
+    
+    def get_bottom_name(self, layer_name):
+        return self.net.bottom_names[layer_name]
+    
+    def get_top_name(self, layer_name):
+        return self.net.top_names[layer_name]
 
+    def get_last_layer_from_top_name(self, top_blob_name):
+        last_layer_name = ''
+        last_layer_id = -1
+        for layer_id,layer_name in enumerate(list(self.net._layer_names)):
+            for top_blob in self.net.top_names[layer_name]:
+                if top_blob == top_blob_name:
+                    last_layer_name = layer_name
+                    last_layer_id = layer_id
+        return last_layer_id,last_layer_name
     def forward(self):
         self.net.forward()
 
@@ -381,3 +396,6 @@ class CaffeBackend():
         self.net.forward()
     def backward(self):
         self.net.backward()
+    
+    def generate_net_parameter(self):
+        return caffe_pb2.NetParameter()
