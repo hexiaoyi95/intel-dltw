@@ -30,10 +30,14 @@
 	  <tr>
 	    {% for item in title[i] %}
 	    {% if item in ctx.keys() %}
-	      {% if ctx[item] == "fail" %}
-	    	<td style="color: red"> {{ ctx[item] }} </td>
+	      {% if item == "test_result" %}
+		{% if ctx[item] == "fail" %}
+	    	<td><a href={{ ctx.report_path }} style="color: red"> {{ ctx[item] }} </a></td>
+		{% else %}
+	    	<td><a href={{ ctx.report_path }}> {{ ctx[item] }} </a></td>
+		{% endif %}		
 	      {% else %}
-	    	<td> {{ ctx[item] }} </td>
+	    	<td>{{ ctx[item] }}</td>
 	      {% endif %}	
 	    {% else %}
 	    <td> \ </td>

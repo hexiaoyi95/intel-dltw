@@ -19,7 +19,7 @@ def args_process():
     arg_parser = argparse.ArgumentParser(description='')
     arg_parser.add_argument('--config', '-c', default=DEFAULT_CONFIG, help='config file for running suite')
     arg_parser.add_argument('--parent_dir', '-p', default='core_out', help='parent dir for saving output')
-    arg_parser.add_argument('--run_ref', '-r', default='off', help='whether rerun reference')
+    arg_parser.add_argument('--run_ref', '-r', default='off', help='only run reference')
     arg_parser.add_argument('--python_path', '-pp', default='', help='python path of backend')
     arg_parser.add_argument('--cpu_type', '-cpu', default='core', help='target cpu type')
     args = arg_parser.parse_args()
@@ -85,9 +85,11 @@ def main():
                 shutil.rmtree(real_path)
     
     for jsonPath,is_ref in jsonPathList:
-        if is_ref and args.run_ref != 'on':
+        if ( args.run_ref != 'on' and not is_ref ) or (args.run_ref == 'on' and is_ref ):
+            call(["./bin/run_case.py", "-c", jsonPath, "-p", args.parent_dir, "-pp", args.python_path])
+        else:
             continue
-        call(["./bin/run_case.py", "-c", jsonPath, "-p", args.parent_dir, "-pp", args.python_path])
+   
     test_case_successed = 0
     test_case_failed = 0
 
@@ -137,7 +139,7 @@ def main():
                     test_case_successed +=1
                     pass_or_fail = report_fp.readline().strip().split('\t')[-1]
                     case_info_dict['test_result'] = pass_or_fail
-                    case_info_dict['report_path'] = os.path.join('test_report',\
+                    case_info_dict['report_path'] = os.path.join(args.parent_dir, 'test_report',\
                         os.path.dirname(report_path) + '.txt')
                     report_fp.close()
             #redefine  
