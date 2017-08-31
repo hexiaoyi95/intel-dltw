@@ -331,23 +331,22 @@ class CaffeBackend():
              
 
             result[layer_name] = layer_result
-        #for fix the issue which MKL2017 optimization rule 3 make
-        if config.model.type == 'train' and ( config.backend.engine == 'MKL2017' or \
+        #for fix the issue which MKL/DNN optimization rule 3 make
+        if ( config.backend.engine == 'MKL2017' or \
                 config.backend.engine == 'MKLDNN' ):
-            if config.backend.engine == 'MKL2017':
-                conv_type = 'MklConvolution'
-            else:
-                conv_type = 'Convolution'
+            latest_bn_top_name=""
             for layer_name,layer_result in result.iteritems():
                 layer_id = self.get_layer_id(layer_name)
                 for index,[blob_name, data_list] in enumerate(layer_result):
-                    #blob_name=orig_name + '_x' + '_data' or '_diff',now we want to rm '_x'
                     if blob_name.split('_')[-2] == 'x':
-                        blob_name = blob_name[:-7]+blob_name[-5:]
-                        result[self.get_layer_name(layer_id)][index] = [blob_name,data_list]
-                        if self.get_layer_type(layer_id-1) == conv_type \
-                            and self.get_layer_type(layer_id) == 'BatchNorm':
-                            result[self.get_layer_name(layer_id-1)][index] = [blob_name,data_list] 
+                        if self.get_layer_type(layer_id) == 'BatchNorm': 
+                            result[self.get_layer_name(layer_id-1)][index] = [blob_name + "_not_exist_in_caffe_engine", data_list] 
+                            latest_bn_top_name=blob_name
+                        #elif config.forward_only:
+                        #    if blob_name == latest_bn_top_name and result[self.get_layer_name(layer_id+1)][index][0] != blob_name :
+                        #        blob_name = blob_name[:-7]+blob_name[-5:]
+                        #        result[self.get_layer_name(layer_id)][index] = [blob_name, data_list] 
+                                 
         return result
 
     def clear_param_diffs(self):   
