@@ -7,8 +7,6 @@ import pprint
 import os
 import math
 from utils.benchmark import Timer
-from utils.io import dict2json
-import google.protobuf.text_format as txtf
 
 def iscloseFP(a, b, precision=PRECISION):
     return abs(a-b) < precision
@@ -247,25 +245,45 @@ def check_layer_accuracy_result(batch_name, test_datas, test_diffs,ref_dir, chec
 
     return last_res
 
-
-def check_error(data, data_ref, ctx, rtol, atol, check_method):
+def check_result_mklUnitTest(data, data_ref, ctx, rtol, atol):
     result = list()
     count = 0
     check_result = True
     if data.shape == data_ref.shape:
-        if check_method == 'mklUnitTest':
-            error=np.where( abs(data_ref) <= atol, data-data_ref, (data-data_ref)/data_ref )
-            pick_array = rtol < abs(error)
-            isequal = not pick_array.any()
-            if isequal:
-                return isequal,result
-        elif check_method == 'npAllClose':
-            isequal = np.allclose(data, data_ref, rtol=rtol, atol=atol, equal_nan=False)
-            if isequal:
-                return isequal,result
-            pick_array = np.less_equal(abs(data_ref)*rtol  + atol, abs(data - data_ref))
-        else:
-            raise Exception("unExcepted check method")
+        for index, val_ref in np.ndenumerate(data_ref):
+            diff= data[index] - val_ref
+            error = diff if abs(val_ref) <= atol else diff/val_ref
+            if abs(error) >= rtol:
+                check_result = False
+                count += 1
+                result.append([count, index, str(data[index]) , str(data_ref[index])])
+            if count >= 100:
+                count = 0
+                break 
+    else:
+        logger.warn('compared arrys shape not match %s vs %s'  \
+            %(str(data.shape),str(data_ref.shape)))
+        return False,[[ctx,"the shape of test data: %s do not match the one of reference: %s" \
+            % (str(data.shape),str(data_ref.shape))]]
+    result.insert(0,['id','coordinate','test value','reference value'])
+    
+    if count == 0:
+        result.insert(0, [ctx, 'blob shape: ' + str(data.shape), \
+            'total fail: >100/{}'.format(data.size)])
+    else:
+        result.insert(0,[ctx, 'blob shape: '+ str(data.shape) , \
+            'total fail: {}/{}'.format(count,data.size)])
+    return check_result,result
+
+def check_result_npAllClose(data, data_ref, ctx, rtol, atol):
+    result = list()
+    count = 0
+    check_result = True
+    if data.shape == data_ref.shape:
+        isequal = np.allclose(data, data_ref, rtol=rtol, atol=atol, equal_nan=False)
+        if isequal:
+            return isequal,result
+        pick_array = np.less_equal(abs(data_ref)*rtol  + atol, abs(data - data_ref))
         data_fail = data[pick_array]   
         data_ref_fail = data_ref[pick_array]
         #get the index of value, will influence the performance
@@ -305,14 +323,12 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, r
     update_accuracy = 'pass'
     test_result_str = 'pass'
     first_param = True
-    first_blob_fail = True
     for layer_name, l in test_result.iteritems():
         count +=1
         this_layer_pass = 'pass'
         this_layer_result = list()
         detailTXT = list()
         for j, [blob_name, np_list] in enumerate(l):
-            #blob_name = real_blob_name + '_data' or '_diff'
             ref_sample_list = list()
             sample_list = list()
 
@@ -341,8 +357,14 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, r
                     rtol_real = rtol
                     atol_real = atol
 
-                isequal,detail_diff=check_error(np_arry,ref_data, ctx, \
-                                        rtol_real, atol_real, check_method)
+                if check_method == 'npAllClose':
+                    isequal,detail_diff=check_result_npAllClose(np_arry, ref_data, ctx, \
+                                        rtol_real, atol_real)
+                elif check_method == 'mklUnitTest':
+                    isequal,detail_diff=check_result_mklUnitTest(np_arry,ref_data, ctx, \
+                                        rtol_real, atol_real)
+                else:
+                    raise Exception('Unexcepted check method: {}'.format(check_method))
 
                 if isequal:
                     this_arry = 'pass'
@@ -354,10 +376,6 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, r
                     #detail_diff = find_fail(np_arry, ref_data, ctx , precision)
                     this_layer_result.extend(detail_diff[:11])
                     detailTXT.extend(detail_diff)
-                    if ctx == blob_name and first_blob_fail:
-                        generate_data_for_reproduce(backend, blob_name, layer_name, \
-                                    ref_dir, out_dir, config)
-                        first_blob_fail = False
                     if accuracy_level == 'bwd':
                         if blob_name == 'params_diff':
                             test_result_str = 'fail'
@@ -489,84 +507,3 @@ def is_data_layer(layer_type):
         return True
     else:
         return False 
-
-def generate_data_for_reproduce(backend, blob_name, layer_name, ref_dir, out_dir, config):
-
-    top_blob_name = blob_name.split('_')[0]
-    bottom_blob_name_list = backend.get_bottom_name(layer_name)
-    data_type = blob_name.split('_')[1]#'data' or 'diff'
-    last_layer_id,last_layer_name=backend.get_last_layer_from_top_name(top_blob_name)
-    net_params = backend.generate_net_parameter()
-
-    bottom_data_list = list()
-    ref_bottom_data_list = list()
-    
-    for blob_name in bottom_blob_name_list:
-        bottom_data_list.append([blob_name,os.path.join(out_dir, blob_name.replace('/','-') + \
-                           '_' + data_type +  '.npy')])
-        ref_bottom_data_list.append([blob_name,os.path.join(ref_dir, \
-                            blob_name.replace('/','-') + '_' + data_type + '.npy')])
-
-    top_data_path = [top_blob_name, os.path.join(out_dir, top_blob_name.replace('/','-') + \
-                '_' + data_type + '.npy')]
-    ref_top_data_path = [top_blob_name, os.path.join(ref_dir, top_blob_name.replace('/','-') + \
-                '_' + data_type + '.npy')]
-
-    input_layers_str = 'layer {\n   name: "input"\n    type: "Input"\n '
-    shape_param = 'input_param{\n'
-    for blob_name, data_path in bottom_data_list:
-        data = np.load(data_path)
-        data_shape = data.shape
-        input_layers_str += '   top: "{}"\n'.format(blob_name)
-        shape = ''
-        for dim in data_shape:
-            shape += 'dim:{} '.format(int(dim))
-        shape_param += 'shape: { %s }\n' % (shape)
-    shape_param += '}\n'    
-    input_layers_str += shape_param
-    input_layers_str += '}\n'
-
-    with open(str(config.model.topology)) as fp:
-        s=fp.read()
-        txtf.Merge(s,net_params)
-         
-    start_layer_id = backend.get_layer_id(layer_name)
-    target_net = 'name: "single layer for reproduce bug"\n' 
-    target_net += input_layers_str 
-
-    for layer_id in range(start_layer_id, last_layer_id + 1):
-        for index in range(len(net_params.layer)):
-            if net_params.layer[index].name == backend.get_layer_name(layer_id):
-                target_layer_str = str(net_params.layer[index])
-                target_net += 'layer {\n' + \
-                                target_layer_str + \
-                              '}\n'
-                break
-     
-    target_prototxt = backend.generate_net_parameter()
-    txtf.Merge(target_net, target_prototxt)
-    
-    #next output data 
-     
-    output_dict = dict()
-    output_dict['ref_bottom_data_path'] = ref_bottom_data_list
-    output_dict['ref_top_data_path'] = ref_top_data_path
-    output_dict['bottom_data_path'] = bottom_data_list
-    output_dict['top_data_path'] = top_data_path
-    output_dict['precision'] = {'rtol' : config.precision.rtol, 'atol' : config.precision.atol, \
-                                'check_method' : config.precision.check_method}
-    output_dict['weight'] = config.model.weight 
-    output_dict['python_path'] = config.backend.python_path 
-    output_dict['phase'] = config.model.type
-    output_dict['ref_item'] = config.reference.ref_item
-    output_dict['ref_value'] = config.reference.ref_value
-    output_dict['test_value'] = config.backend.engine
-    
-    save_dir = os.path.join(out_dir, 'for_reproduce')
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-    with open(os.path.join(save_dir, 'test.topology'), 'w') as fp:
-        fp.write(target_net)
-
-    dict2json(output_dict, os.path.join(save_dir, 'config.json'))
-             
