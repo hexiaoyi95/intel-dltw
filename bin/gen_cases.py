@@ -4,12 +4,12 @@ import sys
 import os
 import argparse
 import logging
-from logging.config import fileConfig
+from logging.config import fileconfig
 
 
-os.environ['GLOG_minloglevel'] = '1'
-WORKHOME = os.path.join(os.path.dirname(__file__), '..')
-sys.path.insert(1, WORKHOME)
+os.environ['glog_minloglevel'] = '1'
+workhome = os.path.join(os.path.dirname(__file__), '..')
+sys.path.insert(1, workhome)
 from utils import io
 
 DEFAULT_CONFIG = os.path.join(WORKHOME, 'test-config', 'templates', 'test-gen-cases.json')
@@ -92,7 +92,6 @@ def genJson(json_name,
              weight = None,
              mean_value = None,
              input_path = None,
-             test_type = None,
              precision = None,
              reportOrder = None):
     _backend = genBackend( python_path, backend, engine)
@@ -106,7 +105,6 @@ def genJson(json_name,
     result['iteration'] = int(iteration)
     result['out_dir'] = out_dir
     result['batch_size'] = int(batch_size)
-    result['test_type'] = test_type
     if input_path != None:
         result['input_path'] = input_path
     if mean_value != None:
