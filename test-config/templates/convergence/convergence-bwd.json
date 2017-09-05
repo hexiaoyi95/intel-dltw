@@ -16,7 +16,8 @@
     "iteration" : 2,
     "out_dir" : "out/convergency/out",
     "reference" : {
-        "result_dir": "out/convergency/ref"
+        "result_dir": "out/convergency/ref",
+	"config_path" : "test-config/templates/convergence/convergence-bwd-ref.json"
     },
     "precision" : {
 	"rtol" : 1e-02,
