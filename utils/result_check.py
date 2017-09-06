@@ -254,7 +254,8 @@ def check_error(data, data_ref, ctx, rtol, atol, check_method):
     check_result = True
     if data.shape == data_ref.shape:
         if check_method == 'mklUnitTest':
-            error=np.where( abs(data_ref) <= atol, data-data_ref, (data-data_ref)/data_ref )
+            with np.errstate(invalid='ignore'):
+                error=np.where( abs(data_ref) <= atol, data-data_ref, (data-data_ref)/data_ref )
             pick_array = rtol < abs(error)
             isequal = not pick_array.any()
             if isequal:
@@ -268,13 +269,12 @@ def check_error(data, data_ref, ctx, rtol, atol, check_method):
             raise Exception("unExcepted check method")
         data_fail = data[pick_array]   
         data_ref_fail = data_ref[pick_array]
-        #get the index of value, will influence the performance
-        #index_fail = np.transpose(np.nonzero(pick_array))
+        index_fail = np.transpose(np.nonzero(pick_array))
         count = len(data_fail)
         #only get 100 failed value at most
         fail_num = len(data_fail) if len(data_fail) < 100 else 100
         for i in range(fail_num):
-            result.append([i, str(data_fail[i]) , str(data_ref_fail[i])])
+            result.append([str(index_fail[i]), str(data_fail[i]) , str(data_ref_fail[i])])
 
     else:
         logger.warn('compared arrys shape not match %s vs %s'  \
@@ -282,7 +282,7 @@ def check_error(data, data_ref, ctx, rtol, atol, check_method):
         return False,[[ctx,"the shape of test data: %s do not match the one of reference: %s" \
             % (str(data.shape),str(data_ref.shape))]]
 
-    result.insert(0,['id','test value','reference value'])
+    result.insert(0,['index','test value','reference value'])
     
     result.insert(0,[ctx, 'blob shape: '+ str(data.shape) , \
             'total fail: {}/{}'.format(count,data.size)])
@@ -355,7 +355,8 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, r
                     this_layer_result.extend(detail_diff[:11])
                     detailTXT.extend(detail_diff)
                     if ctx == blob_name and first_blob_fail:
-                        generate_data_for_reproduce(backend, blob_name, layer_name, \
+                        if hasattr(config, 'reproduce'):
+                            generate_data_for_reproduce(backend, blob_name, layer_name, \
                                     ref_dir, out_dir, config)
                         first_blob_fail = False
                     if accuracy_level == 'bwd':
@@ -558,9 +559,8 @@ def generate_data_for_reproduce(backend, blob_name, layer_name, ref_dir, out_dir
     output_dict['weight'] = config.model.weight 
     output_dict['python_path'] = config.backend.python_path 
     output_dict['phase'] = config.model.type
-    output_dict['ref_item'] = config.reference.ref_item
-    output_dict['ref_value'] = config.reference.ref_value
-    output_dict['test_value'] = config.backend.engine
+    output_dict['engine'] = config.backend.engine
+    output_dict['ref_config'] = config.reference.config_path
     
     save_dir = os.path.join(out_dir, 'for_reproduce')
     if not os.path.exists(save_dir):

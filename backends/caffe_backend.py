@@ -301,6 +301,10 @@ class CaffeBackend():
     def get_layer_accuracy_output_debug(self, config):
         result = OrderedDict()
         count = 0
+        if hasattr(config, 'forward_only') and config.forward_only:
+            forward_only = True
+        else:
+            forward_only = False
 
         for layer_name,top_blob_names in self.net.top_names.iteritems():
             count +=1
@@ -309,12 +313,14 @@ class CaffeBackend():
                 layer_id = self.get_layer_id(layer_name) 
                 top_blob = self.net.blobs[blob_name]      
                     
-                if hasattr(config,'forward_only') and config.forward_only:
+                if forward_only or \
+                        (config.model.prototxt_type == 'train_val' and config.debug_mode):
                     data = top_blob.data.copy()
                     layer_result.append([blob_name + '_data', [data]])
                 #diff = top_blob.diff.copy()
                 #layer_result.append([blob_name,[data,diff]])
-                elif config.model.prototxt_type == 'train_val':
+                if (config.model.prototxt_type == 'train_val' or config.debug_mode) and \
+                        not forward_only:
                     diff = top_blob.diff.copy()
                     layer_result.append([blob_name + '_diff' , [diff]])
                     
@@ -326,7 +332,9 @@ class CaffeBackend():
             else:
                 if config.model.prototxt_type == 'solver':
                     layer_result.append(['params_data',[item.data.copy() for item in paramater]])
-                elif config.model.prototxt_type == 'train_val' and not config.forward_only:
+
+                if (config.model.prototxt_type == 'train_val' or config.debug_mode) and \
+                        not forward_only:
                     layer_result.append(['params_diff',[item.diff.copy() for item in paramater]])
              
 
