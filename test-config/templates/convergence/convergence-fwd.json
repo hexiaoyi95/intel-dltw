@@ -17,9 +17,7 @@
     "out_dir" : "out/convergency/out",
     "debug_mode" : false,
     "reference" : {
-        "result_dir": "out/convergency/ref",
-	"ref_item" : "engine",
-	"ref_value" : "default"
+        "result_dir": "out/convergency/ref"
     },
     "precision" : {
 	"rtol" : 1e-02,
