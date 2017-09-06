@@ -13,6 +13,6 @@
     },
     "batch_size" : 1,
     "forward_only": false,
-    "iteration" : 2,
+    "iteration" : 1,
     "out_dir" : "out/convergency/ref"
 }

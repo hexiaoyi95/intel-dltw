@@ -13,15 +13,14 @@
     },
     "forward_only" : false,
     "batch_size" : 1,
-    "iteration" : 2,
+    "iteration" : 1,
     "out_dir" : "out/convergency/out",
     "reference" : {
-        "result_dir": "out/convergency/ref",
-	"config_path" : "test-config/templates/convergence/convergence-bwd-ref.json"
+        "result_dir": "out/convergency/ref"
     },
     "precision" : {
 	"rtol" : 1e-02,
 	"atol" : 1e-04,
-	"check_method" : "mklUnitTest"
+	"check_method" : "npAllClose"
     }
 }

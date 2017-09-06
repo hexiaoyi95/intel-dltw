@@ -355,7 +355,8 @@ def layer_accuracy_convergence(backend, test_result, out_dir, ref_dir, config, r
                     this_layer_result.extend(detail_diff[:11])
                     detailTXT.extend(detail_diff)
                     if ctx == blob_name and first_blob_fail:
-                        generate_data_for_reproduce(backend, blob_name, layer_name, \
+                        if hasattr(config, 'reproduce'):
+                            generate_data_for_reproduce(backend, blob_name, layer_name, \
                                     ref_dir, out_dir, config)
                         first_blob_fail = False
                     if accuracy_level == 'bwd':

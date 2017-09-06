@@ -15,8 +15,7 @@
     "iteration" : 1,
     "out_dir" : "out/convergency/out",
     "reference" : {
-        "result_dir": "out/convergency/ref",
-	"config_path" : "test-config/templates/convergence/convergence-train-ref.json"
+        "result_dir": "out/convergency/ref"
     },
     "precision" : {
 	"rtol" : 1e-02,
