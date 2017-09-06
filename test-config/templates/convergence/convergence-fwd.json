@@ -15,6 +15,7 @@
     "batch_size" : 1,
     "iteration" : 1,
     "out_dir" : "out/convergency/out",
+    "debug_mode" : false,
     "reference" : {
         "result_dir": "out/convergency/ref"
     },
