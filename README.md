@@ -1,6 +1,6 @@
 # intel-dltw
 
-A cross-framework 
+A test tool for deep learning frameworks.
 
 ## Backends
 1. Caffe
